@@ -79,6 +79,10 @@ jk-hosts -p 80 -t 'nmap' | jk-filter address
 ```
 Will print the ip addresses of the hosts that have port 80 open and are up.
 
+Jackal has support to use the netdiscover tool to search for hosts in the ranges. To scan the ranges that have not been scanned by netdiscover use the next command:
+```
+jk-netdiscover -t '!netdiscover'
+```
 
 ## Building your own tools
 Jackal provides an class to interact with the elasticsearch instance. If you want to include jackal in your own tool it's as simple as importing the core class:
