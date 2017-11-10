@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""
+Script to list all of the ranges
+"""
+from jackal import Core, Range
+from jackal.utils import print_json
+
+core = Core()
+
+
+def get(search):
+    result = Range.get(search, ignore=404)
+    if result:
+       print_json(result.to_dict())
+
+
+def main(save):
+    for r in core.get_ranges(save):
+        print_json(r.to_dict())
+
+
+if __name__ == '__main__':
+    if core.arguments.search:
+        get(core.arguments.search)
+    else:
+        main(not core.arguments.disable_save)

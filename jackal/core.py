@@ -1,0 +1,233 @@
+import argparse
+import json
+import sys
+from datetime import datetime
+from os import isatty
+
+from elasticsearch_dsl import (Date, DocType, InnerObjectWrapper, Integer, Ip,
+                               Keyword, Object, Text)
+from elasticsearch_dsl.connections import connections
+
+connections.create_connection(hosts=['localhost'], timeout=20)
+
+
+class Range(DocType):
+    """
+    """
+    name = Text()
+    range = Text(required=True)
+    tags = Keyword(multi=True)
+    created_at = Date()
+    updated_at = Date()
+
+    class Meta:
+        index = 'rt-ranges'
+
+    def save(self, ** kwargs):
+        self.created_at = datetime.now()
+        self.meta.id = self.range
+        return super(Range, self).save(** kwargs)
+
+    def update(self, ** kwargs):
+        self.updated_at = datetime.now()
+        return super(Range, self).update(** kwargs)
+
+
+
+class Service(InnerObjectWrapper):
+    pass
+
+
+class Host(DocType):
+    address = Ip(required=True)
+    tags = Keyword(multi=True)
+    os = Keyword()
+    hostname = Keyword(multi=True)
+    updated_at = Date()
+    services = Object(
+        doc_class=Service,
+        multi=True,
+        properties={
+            'port': Integer(),
+            'state': Keyword(),
+            'banner': Text(),
+            'scripts_results': Text(multi=True),
+            'protocol': Keyword(),
+            'id': Keyword(),
+            'reason': Keyword()
+        }
+    )
+
+    class Meta:
+        index = 'rt-hosts'
+
+
+    def save(self, ** kwargs):
+        self.meta.id = self.address
+        self.created_at = datetime.now()
+        return super(Host, self).save(** kwargs)
+
+
+    def update(self, ** kwargs):
+        self.updated_at = datetime.now()
+        return super(Host, self).update(** kwargs)
+
+
+
+class Core(object):
+    """
+        Core object
+    """
+
+    def __init__(self, use_pipe=True):
+        self.is_pipe = not isatty(sys.stdin.fileno())
+        self.arguments = self.core_parser.parse_args()
+        self.use_pipe = use_pipe
+
+
+    # Provides all of the given ranges as Range objects
+    def get_ranges(self, save=True):
+        """
+            Two options, pipe input or elasticsearch input.
+            pipe input should be checked to see if its json.
+            otherwise default to database.
+        """
+        ranges = []
+        if self.is_pipe and self.use_pipe:
+            for line in sys.stdin:
+                try:
+                    data = json.loads(line.strip())
+                    r = Range(**data)
+                    r.meta.id = r.range
+                    ranges.append(r)
+                except ValueError:
+                    ranges.append(self.ip_to_range(line.strip(), save))
+
+        else:
+            ranges = self.search_ranges()
+        return ranges
+
+    
+    def ip_to_range(self, range_ip, save=True):
+        """
+            Resolves an ip adres to a range object, creating it if it doesn't exists.
+        """
+        result = Range.get(range_ip, ignore=404)
+        if not result:
+            result = Range(range=range_ip)
+            if save:
+                result.save()
+        return result
+
+
+    def ip_to_host(self, ip, save=True):
+        """
+            Resolves an ip adres to a host object, creating it if it doesn't exists.
+        """
+        host = Host.get(ip, ignore=404)
+        if not host:
+            host = Host(address=ip)
+            if save:
+                host.save()
+        return host
+
+
+    def get_hosts(self, save=True):
+        """
+            Three types of input, pipe, argument or elasticsearch. See get_ranges
+        """
+        hosts = []
+        # pipe input first
+        if self.is_pipe and self.use_pipe:
+            for line in sys.stdin:
+                # Check for json
+                try:
+                    data = json.loads(line.strip())
+                    host = Host(**data)
+                    host.meta.id = host.address
+                    hosts.append(host)
+                except ValueError:
+                    # ip data will be created if applicable
+                    hosts.append(self.ip_to_host(line.strip(), save))
+
+        # Argument data second
+        elif self.arguments and self.arguments.hosts:
+            hosts = self.arguments.hosts.split(',')
+            # All hosts will be created if applicable
+            hosts = [self.ip_to_host(h, save) for h in hosts]
+        else:
+            # Otherwise use the search function.
+            hosts = self.search_hosts()
+        return hosts
+
+
+    @property
+    def total_hosts(self):
+        """
+            Helper function to return the number of hosts.
+        """
+        return Host.search().count()
+
+    @property
+    def total_ranges(self):
+        """
+            Helper function to return the number of ranges.
+        """
+        return Range.search().count()
+
+
+    def search_hosts(self):
+        hosts = []
+        search = Host.search()
+        if self.arguments.tag:
+            for tag in self.arguments.tag.split(','):
+                if tag[0] == '!':
+                    search = search.exclude("term", tags=tag[1:])
+                else:
+                    search = search.filter("term", tags=tag)
+        if self.arguments.up:
+            search = search.filter("term", tags='up')
+        if self.arguments.ports:
+            # TODO implement
+            pass
+        if self.arguments.search:
+            # TODO implement
+            pass
+    
+        response = search.execute()
+        for hit in response:
+            hosts.append(hit)
+
+        return hosts
+
+
+    def search_ranges(self):
+        ranges = []
+        response = Range.search().execute()
+        for hit in response:
+            ranges.append(hit)
+        return ranges
+
+
+    @property
+    def core_parser(self):
+        core_parser = argparse.ArgumentParser(add_help=True)
+        core_parser.add_argument('-r', '--ranges', type=str, help="The ranges to use")
+        core_parser.add_argument('-H', '--hosts', type=str, help="The hosts to use")
+        core_parser.add_argument('-v', help="Increase verbosity", action="count", default=0)
+        core_parser.add_argument('-s', '--disable-save', help="Dont store the results automatically", action="store_true")
+        core_parser.add_argument('-f', '--file', type=str, help="Input file to use")
+        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
+        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
+        core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
+        core_parser.add_argument('-t', '--tag', type=str, help="Tag(s) to search for, use (!) for not search, comma (,) to seperate tags")
+        core_parser.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
+        return core_parser
+
+
+    def parse_arguments(self, child_parser):
+        core_parser = self.core_parser
+        core_parser.add_help = False
+        child_parser.parents = [core_parser]
+        self.arguments = child_parser.parse_args()
+        return self.arguments

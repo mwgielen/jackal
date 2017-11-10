@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""
+Script to list all of the ranges
+"""
+import sys
+
+from jackal import Core, Host
+from jackal.utils import print_json
+
+
+core = Core()
+
+def main(save=False):
+    response = core.get_hosts(save)
+    for hit in response:
+        print_json(hit.to_dict())
+
+
+if __name__ == '__main__':
+    main(not core.arguments.disable_save)

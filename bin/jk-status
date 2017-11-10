@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+from jackal.core import Core
+from elasticsearch_dsl.connections import connections
+
+
+def main():
+    core = Core(use_pipe=False)
+    print("Connected to: {}".format(connections.get_connection().info()['cluster_name']))
+    print("Number of ranges defined: {}".format(core.total_hosts))
+    print("Number of hosts defined: {}".format(core.total_ranges))
+
+
+if __name__ == '__main__':
+    main()
