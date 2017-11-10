@@ -76,7 +76,11 @@ class Host(DocType):
 
 class Core(object):
     """
-        Core object
+        Core class that provides the default functionality of all jackal tools.abs
+        The core class provides a way to:
+            - Parse commonly used arguments
+            - Retrieve hosts and ranges from the elasticsearch instance and filter them based on the arguments given.
+            - Create host and range objects from piped input.
     """
 
     def __init__(self, use_pipe=True):
@@ -89,8 +93,8 @@ class Core(object):
     def get_ranges(self, save=True):
         """
             Two options, pipe input or elasticsearch input.
-            pipe input should be checked to see if its json.
-            otherwise default to database.
+            Pipe input should be checked to see if its json.
+            Otherwise default to database.
         """
         ranges = []
         if self.is_pipe and self.use_pipe:
@@ -134,7 +138,7 @@ class Core(object):
 
     def get_hosts(self, save=True):
         """
-            Three types of input, pipe, argument or elasticsearch. See get_ranges
+            Two types of input, pipe or elasticsearch. See get_ranges
         """
         hosts = []
         # pipe input first
@@ -215,7 +219,7 @@ class Core(object):
         core_parser.add_argument('-r', '--ranges', type=str, help="The ranges to use")
         core_parser.add_argument('-H', '--hosts', type=str, help="The hosts to use")
         core_parser.add_argument('-v', help="Increase verbosity", action="count", default=0)
-        core_parser.add_argument('-s', '--disable-save', help="Dont store the results automatically", action="store_true")
+        core_parser.add_argument('-s', '--disable-save', help="Don't store the results automatically", action="store_true")
         core_parser.add_argument('-f', '--file', type=str, help="Input file to use")
         core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
         core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")

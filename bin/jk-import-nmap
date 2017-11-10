@@ -6,10 +6,11 @@ from jackal import Host, Service, Core
 
 def parse_nmap(disable_save, input_file):
     parser = NmapParser()
-    print("Nmap importing file: {}".format(input_file))
+    print("Jackal importing file: {}".format(input_file))
     report = parser.parse_fromfile(input_file)
     print(report)
     for nmap_host in report.hosts:
+        # TODO use core to do this.
         host = Host.get(nmap_host.address, ignore=404)
         if not host:
             host = Host(address=nmap_host.address)
