@@ -15,8 +15,8 @@ Jackal tries to simplify this process by storing everything on a central place b
 
 ## Dependencies
 
-Jackal requires [libnmap](https://github.com/savon-noir/python-libnmap) and [elasticsearch_dsl](https://github.com/elastic/elasticsearch-dsl-py) to function.
-Currently an elasticsearch instance has be installed locally to store the results. In the future other instances may be supported.
+Jackal requires [python-libnmap](https://github.com/savon-noir/python-libnmap) and [elasticsearch_dsl](https://github.com/elastic/elasticsearch-dsl-py) to function.
+To use the jk-netdiscover tool, netdiscover should be installed.
 
 
 ## Usage
@@ -26,9 +26,11 @@ Jackal provides tools to interact with the database. The stand alone tools that 
 - jk-ranges, this tool can be used to retrieve ranges that are saved from elasticsearch.
 - jk-status, this tool will show some information about the data in the elasticsearch instance and print them to screen.
 - jk-filter, to filter an json object to a single value. This provides the ability to use the output of jackal in other tools.
+- jk-configure, to configure jackal.
 
 Futhermore there are tools to interact with some commonly used tools to map the network:
 - jk-import-nmap, to import a finished nmap scan into jackal
+- jk-netdiscover, this will retrieve and scan ranges from elastic. Any discovered hosts are stored in elastic.
 
 ### Command line arguments
 The command line arguments that are shared between all jackal tools can be obtained by the --help or -h switch:
@@ -75,7 +77,7 @@ After the import is done the results can be shown by running the jk-hosts.
 
 To filter the output of jk-hosts pipe the output to jk-filter and give a single argument to filter, for example:
 ```
-jk-hosts -p 80 -t 'nmap' | jk-filter address
+jk-hosts -p 80 -u | jk-filter address
 ```
 Will print the ip addresses of the hosts that have port 80 open and are up.
 
