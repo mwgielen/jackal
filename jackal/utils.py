@@ -4,7 +4,7 @@ import sys
 
 
 def datetime_handler(x):
-    if isinstance(x, datetime):
+    if isinstance(x, datetime.datetime):
         return x.isoformat()
     raise TypeError("Unknown type")
 
