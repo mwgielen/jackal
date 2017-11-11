@@ -8,7 +8,11 @@ from elasticsearch_dsl import (Date, DocType, InnerObjectWrapper, Integer, Ip,
                                Keyword, Object, Text)
 from elasticsearch_dsl.connections import connections
 
-connections.create_connection(hosts=['localhost'], timeout=20)
+from config import Config
+
+config = Config()
+
+connections.create_connection(hosts=[config.host], timeout=20)
 
 
 class Range(DocType):
@@ -21,7 +25,7 @@ class Range(DocType):
     updated_at = Date()
 
     class Meta:
-        index = 'rt-ranges'
+        index = '{}ranges'.format(config.index_prefix)
 
     def save(self, ** kwargs):
         self.created_at = datetime.now()
@@ -59,7 +63,7 @@ class Host(DocType):
     )
 
     class Meta:
-        index = 'rt-hosts'
+        index = '{}hosts'.format(config.index_prefix)
 
 
     def save(self, ** kwargs):

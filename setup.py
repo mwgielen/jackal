@@ -8,4 +8,4 @@ setup(name='jackal',
       url='https://github.com/mwgielen/jackal/',
       packages=['jackal'],
       install_requires=['elasticsearch_dsl', 'python-libnmap'],
-      scripts=['bin/jk-status', 'bin/jk-hosts', 'bin/jk-ranges', 'bin/jk-import-nmap', 'bin/jk-filter'])
+      scripts=['bin/jk-status', 'bin/jk-hosts', 'bin/jk-ranges', 'bin/jk-import-nmap', 'bin/jk-filter', 'bin/jk-configure'])
