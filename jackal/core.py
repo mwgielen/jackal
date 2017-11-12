@@ -267,3 +267,22 @@ class Core(object):
         core_parser.add_argument('-n', '--number', type=int, help="Limit the result list to this number", action="store")
         return core_parser
 
+
+    def merge_host(self, host):
+        """
+            Merge the given host with the host in the elasticsearch cluster, all of the arguments and services are appended.abs
+            If the host does not exist yet in elastic, it will be created.
+        """
+        elastic_host = Host.get(host.address, ignore=404)
+        if elastic_host:
+            values = host.to_dict()
+            for key in values:
+                if key == 'address':
+                    continue
+                newattr = getattr(elastic_host, key)
+                newattr.extend(values[key])
+                newattr = list(set(newattr))
+                setattr(elastic_host, key, newattr)
+            elastic_host.save()
+        else:
+            host.save()

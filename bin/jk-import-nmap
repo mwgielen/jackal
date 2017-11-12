@@ -1,31 +1,32 @@
 #!/usr/bin/env python3
-import argparse
+from jackal import Core, Host
 from libnmap.parser import NmapParser
-from jackal import Host, Service, Core
 
 
-def parse_nmap(disable_save, input_file):
+core = Core(use_pipe=False)
+
+def parse_nmap(input_file):
     parser = NmapParser()
     print("Jackal importing file: {}".format(input_file))
     report = parser.parse_fromfile(input_file)
-    print(report)
+    print("Number of hosts in the nmap file: {}".format(report.hosts_total))
+    imported_hosts = 0
     for nmap_host in report.hosts:
-        # TODO use core to do this.
-        host = Host.get(nmap_host.address, ignore=404)
-        if not host:
-            host = Host(address=nmap_host.address)
-            if not disable_save:
-                host.save()
-        tags = host.tags.extend(['nmap', nmap_host.status])
-        tags = list(set(host.tags))
-        services = host.services
-        for service in nmap_host.services:
-            services.append(service.get_dict())
-        if not disable_save:
-            host.update(tags=tags, services=services)
-    print("Nmap import done")
+        if nmap_host.status == 'up' or nmap_host.hostnames:
+            imported_hosts += 1
+            host = Host()
+            host.address = nmap_host.address
+            host.tags = ['nmap', nmap_host.status]
+            if nmap_host.os_fingerprinted:
+                host.os = nmap_host.os_fingerprint
+            host.hostname = nmap_host.hostnames
+            for service in nmap_host.services:
+                host.services.append(service.get_dict())
+    if imported_hosts == 0:
+        print("No hosts imported, all hosts' status was unknown or down, only hosts with status 'up' or hostname set are imported.")
+    else:
+        print("Import done, hosts imported: {}".format(imported_hosts))
 
 if __name__ == '__main__':
-    core = Core(use_pipe=False)
     if core.arguments.file:
-        parse_nmap(core.arguments.disable_save, core.arguments.file)
+        parse_nmap(core.arguments.file)
