@@ -13,11 +13,12 @@ To sort through this data hackers may use things like cut, sort grep etc to go t
 Jackal tries to simplify this process by storing everything on a central place by merging the data gathered by the hacker and making it easily searchable.
 
 
-## Dependencies
+## Dependencies and installation
 
 Jackal requires [python-libnmap](https://github.com/savon-noir/python-libnmap) and [elasticsearch_dsl](https://github.com/elastic/elasticsearch-dsl-py) to function.
 To use the jk-netdiscover tool, netdiscover should be installed.
 
+Thispackage can be installed with `pip install jackal` or the latest version can be installed with `python setup.py install`.
 
 ## Usage
 

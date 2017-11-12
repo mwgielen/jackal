@@ -18,7 +18,7 @@ def manual_configure():
     """
         Function to manually configure jackal.
     """
-    print("Manual configure")
+    print("Manual configuring jackal")
     host = input_with_default("What is the Elasticsearch host?", 'localhost')
     index_prefix = input_with_default("What prefix should jackal use for indices?", 'jk-')
     initialize_indices = (input_with_default("Do you want to initialize the indices now?", 'n').lower() == 'y')

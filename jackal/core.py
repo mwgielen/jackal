@@ -17,6 +17,8 @@ connections.create_connection(hosts=[config.host], timeout=20)
 
 class Range(DocType):
     """
+        This class represents a range in elasticsearch.
+        The range attribute will also be used as the id of a range.
     """
     name = Text()
     range = Text(required=True)
@@ -43,10 +45,15 @@ class Service(InnerObjectWrapper):
 
 
 class Host(DocType):
+    """
+        This class represents a host object in elasticsearch.
+        The address attribute will be used to set the id of a host.
+    """
     address = Ip(required=True)
     tags = Keyword(multi=True)
     os = Keyword()
     hostname = Keyword(multi=True)
+    created_at = Date()
     updated_at = Date()
     services = Object(
         doc_class=Service,
@@ -115,7 +122,7 @@ class Core(object):
             ranges = self.search_ranges()
         return ranges
 
-    
+
     def ip_to_range(self, range_ip, save=True):
         """
             Resolves an ip adres to a range object, creating it if it doesn't exists.
@@ -185,6 +192,10 @@ class Core(object):
 
 
     def search_hosts(self):
+        """
+            This function will perform a query on the elasticsearch instance with the given command line arguments.
+            Currently tag and up arguments are implemented. Ports and search are not yet implemented.
+        """
         hosts = []
         search = Host.search()
         if self.arguments.tag:
@@ -210,6 +221,10 @@ class Core(object):
 
 
     def search_ranges(self):
+        """
+            This function will perform a query on the elasticsearch instance.
+            Currently only tag search is implemented.
+        """
         ranges = []
         response = Range.search().execute()
         for hit in response:
@@ -234,6 +249,8 @@ class Core(object):
 
 
     def parse_arguments(self, child_parser):
+        """
+        """
         core_parser = self.core_parser
         core_parser.add_help = False
         child_parser.parents = [core_parser]
