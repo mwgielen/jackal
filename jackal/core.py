@@ -165,11 +165,6 @@ class Core(object):
                     # ip data will be created if applicable
                     hosts.append(self.ip_to_host(line.strip(), save))
 
-        # Argument data second
-        elif self.arguments and self.arguments.hosts:
-            hosts = self.arguments.hosts.split(',')
-            # All hosts will be created if applicable
-            hosts = [self.ip_to_host(h, save) for h in hosts]
         else:
             # Otherwise use the search function.
             hosts = self.search_hosts()
@@ -255,12 +250,3 @@ class Core(object):
         core_parser.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
         return core_parser
 
-
-    def parse_arguments(self, child_parser):
-        """
-        """
-        core_parser = self.core_parser
-        core_parser.add_help = False
-        child_parser.parents = [core_parser]
-        self.arguments = child_parser.parse_args()
-        return self.arguments
