@@ -189,7 +189,7 @@ class Core(object):
     def search_hosts(self):
         """
             This function will perform a query on the elasticsearch instance with the given command line arguments.
-            Currently tag and up arguments are implemented. Ports and search are not yet implemented.
+            Currently tag, up and port arguments are implemented. Search is not yet implemented.
         """
         hosts = []
         search = Host.search()
@@ -202,8 +202,8 @@ class Core(object):
         if self.arguments.up:
             search = search.filter("term", tags='up')
         if self.arguments.ports:
-            # TODO implement
-            pass
+            for port in self.arguments.ports.split(','):
+                search = search.filter("match", services__port=port)
         if self.arguments.search:
             # TODO implement
             pass
