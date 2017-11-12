@@ -207,8 +207,16 @@ class Core(object):
         if self.arguments.search:
             # TODO implement
             pass
-    
-        response = search.execute()
+
+        
+        if self.arguments.number:
+            search = search[0:self.arguments.number]
+            response = search.execute()
+        elif self.arguments.count:
+            return search.count()
+        else:
+            response = search.scan()
+
         for hit in response:
             hosts.append(hit)
 
@@ -229,9 +237,17 @@ class Core(object):
                     search = search.filter("term", tags=tag)
 
         ranges = []
-        response = search.execute()
+        if self.arguments.number:
+            search = search[0:self.arguments.number]
+            response = search.execute()
+        elif self.arguments.count:
+            return search.count()
+        else:
+            response = search.scan()
+
         for hit in response:
             ranges.append(hit)
+
         return ranges
 
 
@@ -248,5 +264,6 @@ class Core(object):
         core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
         core_parser.add_argument('-t', '--tag', type=str, help="Tag(s) to search for, use (!) for not search, comma (,) to seperate tags")
         core_parser.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
+        core_parser.add_argument('-n', '--number', type=int, help="Limit the result list to this number", action="store")
         return core_parser
 

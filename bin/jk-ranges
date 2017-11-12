@@ -3,24 +3,19 @@
 Script to list all of the ranges
 """
 from jackal import Core, Range
-from jackal.utils import print_json
+from jackal.utils import print_json, print_line
 
 core = Core()
 
 
-def get(search):
-    result = Range.get(search, ignore=404)
-    if result:
-       print_json(result.to_dict())
-
-
-def main(save):
-    for r in core.get_ranges(save):
-        print_json(r.to_dict())
+def main():
+    response = core.get_ranges()
+    if isinstance(response, int):
+        print_line("Number of ranges: {}".format(response))
+    else:
+        for hit in response:
+            print_json(hit.to_dict())
 
 
 if __name__ == '__main__':
-    if core.arguments.search:
-        get(core.arguments.search)
-    else:
-        main(not core.arguments.disable_save)
+    main()
