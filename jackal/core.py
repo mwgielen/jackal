@@ -225,8 +225,16 @@ class Core(object):
             This function will perform a query on the elasticsearch instance.
             Currently only tag search is implemented.
         """
+        search = Range.search()
+        if self.arguments.tag:
+            for tag in self.arguments.tag.split(','):
+                if tag[0] == '!':
+                    search = search.exclude("term", tags=tag[1:])
+                else:
+                    search = search.filter("term", tags=tag)
+
         ranges = []
-        response = Range.search().execute()
+        response = search.execute()
         for hit in response:
             ranges.append(hit)
         return ranges
