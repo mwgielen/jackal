@@ -22,6 +22,7 @@ def parse_nmap(input_file):
             host.hostname = nmap_host.hostnames
             for service in nmap_host.services:
                 host.services.append(service.get_dict())
+            core.merge_host(host)
     if imported_hosts == 0:
         print("No hosts imported, all hosts' status was unknown or down, only hosts with status 'up' or hostname set are imported.")
     else:
