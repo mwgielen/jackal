@@ -19,10 +19,10 @@ def manual_configure():
         Function to manually configure jackal.
     """
     print("Manual configuring jackal")
-    host = input_with_default("What is the Elasticsearch host?", 'localhost')
-    index_prefix = input_with_default("What prefix should jackal use for indices?", 'jk-')
-    initialize_indices = (input_with_default("Do you want to initialize the indices now?", 'n').lower() == 'y')
     config = Config()
+    host = input_with_default("What is the Elasticsearch host?", config.host)
+    index_prefix = input_with_default("What prefix should jackal use for indices?", config.index_prefix)
+    initialize_indices = (input_with_default("Do you want to initialize the indices now?", 'n').lower() == 'y')
     config.configure(host, index_prefix, initialize_indices)
 
 
@@ -33,7 +33,6 @@ class Config(object):
     """
 
     def __init__(self):
-        self.load_config()
         self.host = 'localhost'
         self.index_prefix = 'jk-'
         self.load_config()
@@ -74,8 +73,12 @@ class Config(object):
         """
         if not os.path.exists(self.config_dir):
             os.mkdir(self.config_dir)
+
         config = ConfigParser.ConfigParser()
-        config.add_section('jackal')
+        if os.path.exists(self.config_file):
+            config.read(self.config_file)
+        else:
+            config.add_section('jackal')
         config.set('jackal', 'host', host)
         config.set('jackal', 'index_prefix', index_prefix)
 
@@ -84,5 +87,5 @@ class Config(object):
 
         if initialize_indices:
             from jackal.core import Host, Range
-            Host.init()
-            Range.init()
+            Host.init(index='{}hosts'.format(index_prefix))
+            Range.init(index='{}ranges'.format(index_prefix))
