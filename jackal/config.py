@@ -21,9 +21,9 @@ def manual_configure():
     print("Manual configuring jackal")
     config = Config()
     host = input_with_default("What is the Elasticsearch host?", config.host)
-    index_prefix = input_with_default("What prefix should jackal use for indices?", config.index_prefix)
+    index = input_with_default("What index should jackal use?", config.index)
     initialize_indices = (input_with_default("Do you want to initialize the indices now?", 'n').lower() == 'y')
-    config.configure(host, index_prefix, initialize_indices)
+    config.configure(host, index, initialize_indices)
 
 
 class Config(object):
@@ -34,7 +34,7 @@ class Config(object):
 
     def __init__(self):
         self.host = 'localhost'
-        self.index_prefix = 'jk-'
+        self.index = 'jackal'
         self.load_config()
 
 
@@ -46,7 +46,7 @@ class Config(object):
             config = ConfigParser.ConfigParser()
             config.read(self.config_file)
             self.host = config.get('jackal', 'host')
-            self.index_prefix = config.get('jackal', 'index_prefix')
+            self.index = config.get('jackal', 'index')
 
 
     @property
@@ -67,7 +67,7 @@ class Config(object):
         return config_dir
         
 
-    def configure(self, host, index_prefix, initialize_indices):
+    def configure(self, host, index, initialize_indices):
         """
             Writes given configuration to the config file so it's used in jackal.
         """
@@ -80,12 +80,12 @@ class Config(object):
         else:
             config.add_section('jackal')
         config.set('jackal', 'host', host)
-        config.set('jackal', 'index_prefix', index_prefix)
+        config.set('jackal', 'index', index)
 
         with open(self.config_file, 'wb') as configfile:
             config.write(configfile)
 
         if initialize_indices:
             from jackal.core import Host, Range
-            Host.init(index='{}hosts'.format(index_prefix))
-            Range.init(index='{}ranges'.format(index_prefix))
+            Host.init(index=index)
+            Range.init(index=index)

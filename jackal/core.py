@@ -27,7 +27,7 @@ class Range(DocType):
     updated_at = Date()
 
     class Meta:
-        index = '{}ranges'.format(config.index_prefix)
+        index = config.index
 
     def save(self, ** kwargs):
         self.created_at = datetime.now()
@@ -70,7 +70,7 @@ class Host(DocType):
     )
 
     class Meta:
-        index = '{}hosts'.format(config.index_prefix)
+        index = config.index
 
 
     def save(self, ** kwargs):
@@ -279,7 +279,7 @@ class Core(object):
             for key in values:
                 if key == 'address':
                     continue
-                newattr = getattr(elastic_host, key)
+                newattr = getattr(elastic_host, key) or []
                 newattr.extend(values[key])
                 newattr = list(set(newattr))
                 setattr(elastic_host, key, newattr)
