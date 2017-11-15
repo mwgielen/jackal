@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from jackal import Core, Host
+from jackal.utils import print_notification, print_error, print_success
 from libnmap.parser import NmapParser
 
 
@@ -7,9 +8,9 @@ core = Core(use_pipe=False)
 
 def parse_nmap(input_file):
     parser = NmapParser()
-    print("Jackal importing file: {}".format(input_file))
+    print_notification("Jackal importing file: {}".format(input_file))
     report = parser.parse_fromfile(input_file)
-    print("Number of hosts in the nmap file: {}".format(report.hosts_total))
+    print_notification("Number of hosts in the nmap file: {}".format(report.hosts_total))
     imported_hosts = 0
     for nmap_host in report.hosts:
         if nmap_host.status == 'up' or nmap_host.hostnames:
@@ -24,9 +25,9 @@ def parse_nmap(input_file):
                 host.services.append(service.get_dict())
             core.merge_host(host)
     if imported_hosts == 0:
-        print("No hosts imported, all hosts' status was unknown or down, only hosts with status 'up' or hostname set are imported.")
+        print_error("No hosts imported, all hosts' status was unknown or down, only hosts with status 'up' or hostname set are imported.")
     else:
-        print("Import done, hosts imported: {}".format(imported_hosts))
+        print_success("Import done, hosts imported: {}".format(imported_hosts))
 
 if __name__ == '__main__':
     if core.arguments.file:
