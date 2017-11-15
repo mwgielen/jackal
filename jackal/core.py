@@ -65,7 +65,8 @@ class Host(DocType):
             'scripts_results': Text(multi=True),
             'protocol': Keyword(),
             'id': Keyword(),
-            'reason': Keyword()
+            'reason': Keyword(),
+            'service': Keyword()
         }
     )
 
@@ -189,7 +190,7 @@ class Core(object):
     def search_hosts(self):
         """
             This function will perform a query on the elasticsearch instance with the given command line arguments.
-            Currently tag, up and port arguments are implemented. Search is not yet implemented.
+            Currently tag, up, port and search arguments are implemented.
         """
         hosts = []
         search = Host.search()
@@ -205,8 +206,8 @@ class Core(object):
             for port in self.arguments.ports.split(','):
                 search = search.filter("match", services__port=port)
         if self.arguments.search:
-            # TODO implement
-            pass
+            for search_argument in self.arguments.search.split(','):
+                search = search.query("multi_match", query=search_argument, fields=['tags', 'os', 'hostname', 'services.banner', 'services.script_results'])
 
         
         if self.arguments.number:
