@@ -29,9 +29,25 @@ def print_json(data):
     """
         Print the given data to stdout.
     """
-    try:
-        sys.stdout.write(json.dumps(data, default=datetime_handler))
-        sys.stdout.write('\n')
-        sys.stdout.flush()
-    except IOError:
-        pass
+    print_line(json.dumps(data, default=datetime_handler))
+
+
+def print_notification(string):
+    """
+        Prints a grey [*] before the message
+    """
+    print_line('\033[94m[*]\033[0m {}'.format(string))
+
+
+def print_success(string):
+    """
+        Prints a green [+] before the message
+    """
+    print_line('\033[92m[+]\033[0m {}'.format(string))
+
+
+def print_error(string):
+    """
+        Prints a red [!] before the message
+    """
+    print_line('\033[91m[!]\033[0m {}'.format(string))
