@@ -209,10 +209,8 @@ class Core(object):
             for search_argument in self.arguments.search.split(','):
                 search = search.query("multi_match", query=search_argument, fields=['tags', 'os', 'hostname', 'services.banner', 'services.script_results'])
 
-        
         if self.arguments.number:
-            search = search[0:self.arguments.number]
-            response = search.execute()
+            response = search[0:self.arguments.number]
         elif self.arguments.count:
             return search.count()
         else:
@@ -239,8 +237,7 @@ class Core(object):
 
         ranges = []
         if self.arguments.number:
-            search = search[0:self.arguments.number]
-            response = search.execute()
+            response = search[0:self.arguments.number]
         elif self.arguments.count:
             return search.count()
         else:
@@ -274,16 +271,29 @@ class Core(object):
             Merge the given host with the host in the elasticsearch cluster, all of the arguments and services are appended.abs
             If the host does not exist yet in elastic, it will be created.
         """
-        elastic_host = Host.get(host.address, ignore=404)
-        if elastic_host:
-            values = host.to_dict()
-            for key in values:
-                if key == 'address':
-                    continue
-                newattr = getattr(elastic_host, key) or []
-                newattr.extend(values[key])
-                newattr = list(set(newattr))
-                setattr(elastic_host, key, newattr)
-            elastic_host.save()
+        self.merge(host, Host, 'address')
+
+
+    def merge(self, new, object_type, id_value):
+        """
+            Merge
+            new: object to be merged.
+            object_type: type of the to be merged object
+            id_value: name of the value in new that is the id of the object.
+        """
+        elastic_object = object_type.get(getattr(new, id_value), ignore=404)
+        if elastic_object:
+            update = {}
+            old = elastic_object.to_dict()
+            new = new.to_dict()
+            for key in new:
+                if not key == id_value:
+                    value = old.get(key, [])
+                    value.extend(new[key])
+                    try:
+                        update[key] = list(set(value))
+                    except TypeError:
+                        update[key] = value
+            elastic_object.update(**update)
         else:
-            host.save()
+            new.save()
