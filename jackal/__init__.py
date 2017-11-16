@@ -1,1 +1,1 @@
-from core import Core, Host, Range, Service
+from jackal.core import Core, Host, Range, Service

@@ -4,7 +4,10 @@
 from builtins import input
 from os.path import expanduser
 import os
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 
 def input_with_default(question, default):
@@ -43,7 +46,7 @@ class Config(object):
             Loads the configuration file.
         """
         if os.path.exists(self.config_file):
-            config = ConfigParser.ConfigParser()
+            config = configparser.ConfigParser()
             config.read(self.config_file)
             self.host = config.get('jackal', 'host')
             self.index = config.get('jackal', 'index')
@@ -74,7 +77,7 @@ class Config(object):
         if not os.path.exists(self.config_dir):
             os.mkdir(self.config_dir)
 
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         if os.path.exists(self.config_file):
             config.read(self.config_file)
         else:

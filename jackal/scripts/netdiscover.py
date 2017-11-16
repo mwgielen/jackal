@@ -40,12 +40,14 @@ class NetDiscover(object):
                 host = Host(address=ip, tags=['netdiscover'])
                 host.save()
 
-
-if __name__ == '__main__':
+def main():
     core = Core()
     ranges = core.get_ranges()
     for r in ranges:
         discover = NetDiscover(r)
         discover.execute()
-        if not core.arguments.disable_save:
-            discover.save()
+        discover.save()
+
+
+if __name__ == '__main__':
+    main()

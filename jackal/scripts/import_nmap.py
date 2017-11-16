@@ -29,6 +29,9 @@ def parse_nmap(input_file):
     else:
         print_success("Import done, hosts imported: {}".format(imported_hosts))
 
-if __name__ == '__main__':
+def main():
     if core.arguments.file:
         parse_nmap(core.arguments.file)
+
+if __name__ == '__main__':
+    main()

@@ -5,10 +5,10 @@ from datetime import datetime
 from os import isatty
 
 from elasticsearch_dsl import (Date, DocType, InnerObjectWrapper, Integer, Ip,
-                               Keyword, Object, Text)
+                               Keyword, Object, Text, Nested)
 from elasticsearch_dsl.connections import connections
 
-from config import Config
+from jackal.config import Config
 
 config = Config()
 
@@ -55,7 +55,7 @@ class Host(DocType):
     hostname = Keyword(multi=True)
     created_at = Date()
     updated_at = Date()
-    services = Object(
+    services = Nested(
         doc_class=Service,
         multi=True,
         properties={
