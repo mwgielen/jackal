@@ -46,10 +46,13 @@ class Config(object):
             Loads the configuration file.
         """
         if os.path.exists(self.config_file):
-            config = configparser.ConfigParser()
-            config.read(self.config_file)
-            self.host = config.get('jackal', 'host')
-            self.index = config.get('jackal', 'index')
+            try:
+                config = configparser.ConfigParser()
+                config.read(self.config_file)
+                self.host = config.get('jackal', 'host')
+                self.index = config.get('jackal', 'index')
+            except configparser.NoSectionError:
+                pass
 
 
     @property
@@ -79,7 +82,10 @@ class Config(object):
 
         config = configparser.ConfigParser()
         if os.path.exists(self.config_file):
-            config.read(self.config_file)
+            try:
+                config.read(self.config_file)
+            except configparser.NoSectionError:
+                config.add_section('jackal')
         else:
             config.add_section('jackal')
         config.set('jackal', 'host', host)
