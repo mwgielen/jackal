@@ -27,7 +27,7 @@ class Range(DocType):
     updated_at = Date()
 
     class Meta:
-        index = config.index
+        index = "{}-ranges".format(config.index)
 
     def save(self, ** kwargs):
         self.created_at = datetime.now()
@@ -71,7 +71,7 @@ class Host(DocType):
     )
 
     class Meta:
-        index = config.index
+        index = "{}-hosts".format(config.index)
 
 
     def save(self, ** kwargs):

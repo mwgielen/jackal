@@ -24,7 +24,7 @@ def manual_configure():
     print("Manual configuring jackal")
     config = Config()
     host = input_with_default("What is the Elasticsearch host?", config.host)
-    index = input_with_default("What index should jackal use?", config.index)
+    index = input_with_default("What index prefix should jackal use?", config.index)
     initialize_indices = (input_with_default("Do you want to initialize the indices now?", 'n').lower() == 'y')
     config.configure(host, index, initialize_indices)
 
@@ -85,10 +85,10 @@ class Config(object):
         config.set('jackal', 'host', host)
         config.set('jackal', 'index', index)
 
-        with open(self.config_file, 'wb') as configfile:
+        with open(self.config_file, 'w') as configfile:
             config.write(configfile)
 
         if initialize_indices:
             from jackal.core import Host, Range
-            Host.init(index=index)
-            Range.init(index=index)
+            Host.init(index="{}-hosts".format(index))
+            Range.init(index="{}-ranges".format(index))
