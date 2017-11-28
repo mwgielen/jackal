@@ -10,6 +10,7 @@ def main():
     print_notification("Index: {}".format(config.index))
     print_notification("Number of hosts defined: {}".format(core.total_hosts))
     print_notification("Number of ranges defined: {}".format(core.total_ranges))
+    print_notification("Number of services defined: {}".format(core.total_services))
 
 
 if __name__ == '__main__':

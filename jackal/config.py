@@ -89,6 +89,7 @@ class Config(object):
             config.write(configfile)
 
         if initialize_indices:
-            from jackal.core import Host, Range
+            from jackal.core import Host, Range, Service
             Host.init(index="{}-hosts".format(index))
             Range.init(index="{}-ranges".format(index))
+            Service.init(index="{}-services".format(index))

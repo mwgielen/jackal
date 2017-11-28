@@ -5,7 +5,7 @@ import datetime
 import json
 import sys
 from libnmap.parser import NmapParser
-from jackal import Host, Core
+from jackal import Host, Core, Service
 
 def datetime_handler(x):
     if isinstance(x, datetime.datetime):
@@ -63,15 +63,25 @@ def import_nmap(input_file):
 
     imported_hosts = 0
     for nmap_host in report.hosts:
-        if nmap_host.status == 'up' or nmap_host.hostnames:
-            imported_hosts += 1
-            host = Host()
-            host.address = nmap_host.address
-            host.tags = ['nmap', nmap_host.status]
-            if nmap_host.os_fingerprinted:
-                host.os = nmap_host.os_fingerprint
-            host.hostname = nmap_host.hostnames
-            for service in nmap_host.services:
-                host.services.append(service.get_dict())
-            core.merge_host(host)
+        imported_hosts += 1
+        host = Host()
+        host.address = nmap_host.address
+        host.tags = ['nmap', nmap_host.status]
+        if nmap_host.os_fingerprinted:
+            host.os = nmap_host.os_fingerprint
+        host.hostname = nmap_host.hostnames
+
+        for service in nmap_host.services:
+            serv = Service(** service.get_dict())
+            serv.address = nmap_host.address
+            serv.save()
+            if service.state == 'open':
+                host.open_ports.append(service.port)
+            if service.state == 'closed':
+                host.closed_ports.append(service.port)
+            if service.state == 'filtered':
+                host.filtered_ports.append(service.port)
+
+        core.merge_host(host)
+
     return imported_hosts

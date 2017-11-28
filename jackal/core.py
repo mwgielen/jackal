@@ -40,8 +40,32 @@ class Range(DocType):
 
 
 
-class Service(InnerObjectWrapper):
-    pass
+class Service(DocType):
+    """
+        This class represents a service object in elasticsearch.
+    """
+    address = Ip(required=True)
+    port = Integer()
+    state = Keyword()
+    banner = Keyword()
+    script_results = Keyword(multi=True)
+    protocol = Keyword()
+    reason = Keyword()
+    service_id = Keyword()
+    created_at = Date()
+    updated_at = Date()
+    tags = Keyword(multi=True)
+
+    class Meta:
+        index = "{}-services".format(config.index)
+
+    def save(self, ** kwargs):
+        self.created_at = datetime.now()
+        return super(Service, self).save(** kwargs)
+
+    def update(self, ** kwargs):
+        self.updated_at = datetime.now()
+        return super(Service, self).update(** kwargs)
 
 
 class Host(DocType):
@@ -55,20 +79,9 @@ class Host(DocType):
     hostname = Keyword(multi=True)
     created_at = Date()
     updated_at = Date()
-    services = Object(
-        doc_class=Service,
-        multi=True,
-        properties={
-            'port': Integer(),
-            'state': Keyword(),
-            'banner': Text(),
-            'scripts_results': Text(multi=True),
-            'protocol': Keyword(),
-            'id': Keyword(),
-            'reason': Keyword(),
-            'service': Keyword()
-        }
-    )
+    open_ports = Integer(multi=True)
+    closed_ports = Integer(multi=True)
+    filtered_ports = Integer(multi=True)
 
     class Meta:
         index = "{}-hosts".format(config.index)
@@ -172,6 +185,28 @@ class Core(object):
         return hosts
 
 
+    def get_services(self):
+        """
+            Retrieves the services.
+        """
+        services = []
+        # pipe input first
+        if self.is_pipe and self.use_pipe:
+            for line in sys.stdin:
+                # Check for json
+                try:
+                    data = json.loads(line.strip())
+                    service = Service(**data)
+                    services.append(service)
+                except ValueError:
+                    pass
+
+        else:
+            # Otherwise use the search function.
+            services = self.search_services()
+        return services
+
+
     @property
     def total_hosts(self):
         """
@@ -185,6 +220,48 @@ class Core(object):
             Helper function to return the number of ranges.
         """
         return Range.search().count()
+
+
+    @property
+    def total_services(self):
+        """
+            Helper function to return the number of services.
+        """
+        return Service.search().count()
+
+
+    def search_services(self):
+        """
+            This function will return the services in the elasticsearch instance.
+        """
+        services = []
+        search = Service.search()
+        if self.arguments.tag:
+            for tag in self.arguments.tag.split(','):
+                if tag[0] == '!':
+                    search = search.exclude("term", tags=tag[1:])
+                else:
+                    search = search.filter("term", tags=tag)
+        if self.arguments.up:
+            search = search.filter("term", tags='up')
+        if self.arguments.ports:
+            for port in self.arguments.ports.split(','):
+                search = search.filter("match", port=port)
+        if self.arguments.search:
+            for search_argument in self.arguments.search.split(','):
+                search = search.query("multi_match", query=search_argument, fields=['script_results', 'tags', 'banner', 'protocol', 'state', 'service'])
+
+        if self.arguments.number:
+            response = search[0:self.arguments.number]
+        elif self.arguments.count:
+            return search.count()
+        else:
+            response = search.scan()
+
+        # response = search.scan()
+        for hit in response:
+            services.append(hit)
+        return services
 
 
     def search_hosts(self):
@@ -204,10 +281,10 @@ class Core(object):
             search = search.filter("term", tags='up')
         if self.arguments.ports:
             for port in self.arguments.ports.split(','):
-                search = search.filter("match", services__port=port)
+                search = search.filter("match", open_ports=port)
         if self.arguments.search:
             for search_argument in self.arguments.search.split(','):
-                search = search.query("multi_match", query=search_argument, fields=['tags', 'os', 'hostname', 'services.banner', 'services.script_results'])
+                search = search.query("multi_match", query=search_argument, fields=['tags', 'os', 'hostname'])
 
         if self.arguments.number:
             response = search[0:self.arguments.number]
@@ -268,7 +345,7 @@ class Core(object):
 
     def merge_host(self, host):
         """
-            Merge the given host with the host in the elasticsearch cluster, all of the arguments and services are appended.abs
+            Merge the given host with the host in the elasticsearch cluster, all of the arguments are appended.
             If the host does not exist yet in elastic, it will be created.
         """
         self.merge(host, Host, 'address')
