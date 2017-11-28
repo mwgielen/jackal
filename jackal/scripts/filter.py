@@ -13,7 +13,10 @@ def main():
             find = sys.argv[1]
             for line in sys.stdin:
                 line = json.loads(line)
-                print_line(line.get(find, ''))
+                result = line.get(find, '')
+                if isinstance(result, list):
+                    result = '[' + ', '.join([str(x) for x in result]) + ']'
+                print_line(result)
         else:
             for line in sys.stdin:
                 print_line(line)
