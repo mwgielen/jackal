@@ -243,14 +243,15 @@ class Core(object):
                 else:
                     search = search.filter("term", tags=tag)
         if self.arguments.up:
-            search = search.filter("term", tags='up')
+            search = search.filter("term", state='open')
         if self.arguments.ports:
             for port in self.arguments.ports.split(','):
                 search = search.filter("match", port=port)
         if self.arguments.search:
             for search_argument in self.arguments.search.split(','):
-                search = search.query("multi_match", query=search_argument, fields=['script_results', 'tags', 'banner', 'protocol', 'state', 'service'])
-
+                search = search.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        if self.arguments.range:
+            search = search.filter('term', address=self.arguments.range)
         if self.arguments.number:
             response = search[0:self.arguments.number]
         elif self.arguments.count:
@@ -284,8 +285,9 @@ class Core(object):
                 search = search.filter("match", open_ports=port)
         if self.arguments.search:
             for search_argument in self.arguments.search.split(','):
-                search = search.query("multi_match", query=search_argument, fields=['tags', 'os', 'hostname'])
-
+                search = search.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        if self.arguments.range:
+            search = search.filter('term', address=self.arguments.range)
         if self.arguments.number:
             response = search[0:self.arguments.number]
         elif self.arguments.count:
@@ -329,8 +331,7 @@ class Core(object):
     @property
     def core_parser(self):
         core_parser = argparse.ArgumentParser(add_help=True)
-        core_parser.add_argument('-r', '--ranges', type=str, help="The ranges to use")
-        core_parser.add_argument('-H', '--hosts', type=str, help="The hosts to use")
+        core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
         core_parser.add_argument('-v', help="Increase verbosity", action="count", default=0)
         core_parser.add_argument('-s', '--disable-save', help="Don't store the results automatically", action="store_true")
         core_parser.add_argument('-f', '--file', type=str, help="Input file to use")
