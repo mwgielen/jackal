@@ -23,7 +23,7 @@ def print_line(text):
             sys.stdout.write('\n')
         sys.stdout.flush()
     except IOError:
-        pass
+        sys.exit(0)
 
 
 def print_json(data):
