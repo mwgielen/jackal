@@ -108,9 +108,10 @@ class Core(object):
             - Create host and range objects from piped input.
     """
 
-    def __init__(self, use_pipe=True):
+    def __init__(self, use_pipe=True, arguments=True):
         self.is_pipe = not isatty(sys.stdin.fileno())
-        self.arguments = self.core_parser.parse_args()
+        if arguments:
+            self.arguments = self.core_parser.parse_args()
         self.use_pipe = use_pipe
 
 
