@@ -5,7 +5,7 @@ from jackal.utils import print_line
 import json
 
 
-def main():
+def filter():
     is_pipe = not isatty(sys.stdin.fileno())
 
     if is_pipe:
@@ -20,3 +20,14 @@ def main():
         else:
             for line in sys.stdin:
                 print_line(line)
+
+
+def format():
+    is_pipe = not isatty(sys.stdin.fileno())
+    style = "{address:15} {port:7} {protocol:5} {service:15} {state:10} {banner}"
+    if len(sys.argv) > 1:
+        style = sys.argv[1]
+    if is_pipe:
+        for line in sys.stdin:
+            line = json.loads(line)
+            print_line(style.format(**line))
