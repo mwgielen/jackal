@@ -368,10 +368,12 @@ class Core(object):
             for key in new:
                 if not key == id_value:
                     value = old.get(key, [])
-                    value.extend(new[key])
                     try:
+                        value.extend(new[key])
                         update[key] = list(set(value))
                     except TypeError:
+                        update[key] = value
+                    except AttributeError:
                         update[key] = value
             elastic_object.update(**update)
         else:

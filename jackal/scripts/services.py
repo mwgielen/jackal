@@ -19,7 +19,7 @@ def overview():
     """
     search = Service.search()
     search = search.filter("term", state='open')
-    search.aggs.bucket('port_count', 'terms', field='port', order={'_count': 'desc'}) \
+    search.aggs.bucket('port_count', 'terms', field='port', order={'_count': 'desc'}, size=100) \
         .metric('unique_count', 'cardinality', field='address')
     response = search.execute()
     print_line("Port     Count")
