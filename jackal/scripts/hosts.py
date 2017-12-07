@@ -15,7 +15,9 @@ def main():
         print_line("Number of hosts: {}".format(response))
     else:
         for hit in response:
-            print_json(hit.to_dict())
+            hit = hit.to_dict(include_meta=True)
+            source = hit.pop('_source')
+            print_json({**hit, **source})
 
 
 if __name__ == '__main__':

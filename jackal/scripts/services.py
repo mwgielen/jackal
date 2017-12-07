@@ -10,7 +10,10 @@ def main():
         print_line("Number of services: {}".format(response))
     else:
         for hit in response:
-            print_json(hit.to_dict())
+            hit = hit.to_dict(include_meta=True)
+            source = hit.pop('_source')
+            print_json({**hit, **source})
+
 
 def overview():
     """
