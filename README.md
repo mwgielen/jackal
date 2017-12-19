@@ -16,9 +16,9 @@ Jackal tries to simplify this process by storing everything on a central place b
 ## Dependencies and installation
 
 Jackal requires [python-libnmap](https://github.com/savon-noir/python-libnmap) and [elasticsearch_dsl](https://github.com/elastic/elasticsearch-dsl-py) to function.
-To use the jk-netdiscover tool, netdiscover should be installed.
+To use the jk-netdiscover tool, netdiscover should be installed. Jackal seems to work fine in python3, use python2 at your own risk.
 
-Thispackage can be installed with `pip install jackal` or the latest version can be installed with `python setup.py install`.
+Thispackage can be installed with `pip3 install jackal` or the latest version can be installed with `python3 setup.py install`.
 
 ## Usage
 
@@ -72,7 +72,7 @@ The hosts can be retrieved by using jk-hosts again.
 
 To import a nmap scan into jackal use jk-import-nmap with the file flag:
 ```
-jk-import-nmap -f /your/nmap/scan.xml
+jk-import-nmap /your/nmap/scan.xml
 ```
 After the import is done the results can be shown by running the jk-hosts.
 
@@ -88,10 +88,24 @@ jk-netdiscover -t '!netdiscover'
 ```
 
 ## Building your own tools
-Jackal provides an class to interact with the elasticsearch instance. If you want to include jackal in your own tool it's as simple as importing the core class:
+Jackal provides a multiple classes to interact with the elasticsearch instance. If you want to include jackal in your own tool it's as simple as importing one of these classes.
+All of these classes share the Core class. This means that these classes share most of the functionality.
 ```
-from jackall import core
+from jackall import Ranges, Hosts, Services
+from jackal.utils import print_json
 
-core = Core()
+ranges = Ranges()
+for r in ranges.get_ranges():
+    print_json(r.to_dict())
+
+hosts = Hosts()
+for h in hosts.get_hosts():
+    print_json(h.to_dict())
+
+services = Services()
+for s in services.get_services():
+    print_json(s.to_dict())
 ```
-The core class provides functionality to obtain the ranges and hosts from the database. Also it provides functionality to obtain hosts and ranges from pipes and to parse commonly used parameters.
+
+These core classes provides functionality to obtain the ranges, hosts and service from elasticsearch. Also it provides functionality to obtain hosts and ranges from pipes and to parse commonly used parameters.
+The scripts folder contain some examples that provide some insight on how to use these classes.

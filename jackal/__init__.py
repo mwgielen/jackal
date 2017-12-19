@@ -1,2 +1,2 @@
-from jackal.core import Core
-from jackal.documents import Host, Range, Service
+from jackal.core import Core, Ranges, Hosts, Services
+from jackal.documents import HostDoc, RangeDoc, ServiceDoc

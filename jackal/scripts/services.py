@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-from jackal import Core, Service
+from jackal import Services, ServiceDoc
 from jackal.utils import print_line, print_json
 
 
 def main():
-    core = Core()
-    response = core.get_services()
-    if isinstance(response, int):
-        print_line("Number of services: {}".format(response))
+    services = Services()
+    arguments = services.core_parser.parse_args()
+    if arguments.count:
+        print_line("Number of services: {}".format(services.argument_count()))
     else:
+        response = services.get_services()
         for hit in response:
             hit = hit.to_dict(include_meta=True)
             source = hit.pop('_source')
@@ -20,7 +21,7 @@ def overview():
         Function to create an overview of the services.
         Will print a list of ports found an the number of times the port was seen.
     """
-    search = Service.search()
+    search = ServiceDoc.search()
     search = search.filter("term", state='open')
     search.aggs.bucket('port_count', 'terms', field='port', order={'_count': 'desc'}, size=100) \
         .metric('unique_count', 'cardinality', field='address')

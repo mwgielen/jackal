@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
-from jackal import Host, Core
+from jackal import HostDoc, Ranges
 from jackal.utils import print_line
 
 
@@ -24,25 +24,24 @@ class NetDiscover(object):
 
 
     def save(self):
+        # TODO fix
         tags = self.ip_range.tags or []
         tags.append('netdiscover')
         tags = list(set(tags))
         self.ip_range.update(tags=tags)
 
         for ip in self.ips:
-            host = Host.get(ip, ignore=404)
+            host = HostDoc.get(ip, ignore=404)
             if host:
-                tags = host.tags or []
-                tags.append('netdiscover')
-                tags = list(set(tags))
-                host.update(tags=tags)
+                host.add_tag('netdiscover')
+                host.update(tags=host.tags)
             else:
-                host = Host(address=ip, tags=['netdiscover'])
+                host = HostDoc(address=ip, tags=['netdiscover'])
                 host.save()
 
 def main():
-    core = Core()
-    ranges = core.get_ranges()
+    ranges = Ranges()
+    ranges = ranges.get_ranges()
     for r in ranges:
         discover = NetDiscover(r)
         discover.execute()

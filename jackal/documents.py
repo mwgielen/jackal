@@ -1,12 +1,13 @@
+from datetime import datetime
+
 from elasticsearch_dsl import (Date, DocType, InnerObjectWrapper, Integer, Ip,
                                Keyword, Object, Text)
 from jackal.config import Config
-from datetime import datetime
 
 config = Config()
 
 
-class Range(DocType):
+class RangeDoc(DocType):
     """
         This class represents a range in elasticsearch.
         The range attribute will also be used as the id of a range.
@@ -23,18 +24,20 @@ class Range(DocType):
     def save(self, ** kwargs):
         self.created_at = datetime.now()
         self.meta.id = self.range
-        return super(Range, self).save(** kwargs)
+        return super(RangeDoc, self).save(** kwargs)
 
     def update(self, ** kwargs):
         self.updated_at = datetime.now()
-        return super(Range, self).update(** kwargs)
+        return super(RangeDoc, self).update(** kwargs)
 
     def __init__(self, **kwargs):
-        super(Range, self).__init__(** kwargs)
+        super(RangeDoc, self).__init__(** kwargs)
         self.meta.id = kwargs.get('range', '')
 
+    def add_tag(self, tag):
+        self.tags = list(set(self.tags or []) | set([tag]))
 
-class Service(DocType):
+class ServiceDoc(DocType):
     """
         This class represents a service object in elasticsearch.
     """
@@ -55,14 +58,16 @@ class Service(DocType):
 
     def save(self, ** kwargs):
         self.created_at = datetime.now()
-        return super(Service, self).save(** kwargs)
+        return super(ServiceDoc, self).save(** kwargs)
 
     def update(self, ** kwargs):
         self.updated_at = datetime.now()
-        return super(Service, self).update(** kwargs)
+        return super(ServiceDoc, self).update(** kwargs)
 
+    def add_tag(self, tag):
+        self.tags = list(set(self.tags or []) | set([tag]))
 
-class Host(DocType):
+class HostDoc(DocType):
     """
         This class represents a host object in elasticsearch.
         The address attribute will be used to set the id of a host.
@@ -83,12 +88,15 @@ class Host(DocType):
     def save(self, ** kwargs):
         self.meta.id = self.address
         self.created_at = datetime.now()
-        return super(Host, self).save(** kwargs)
+        return super(HostDoc, self).save(** kwargs)
 
     def update(self, ** kwargs):
         self.updated_at = datetime.now()
-        return super(Host, self).update(** kwargs)
+        return super(HostDoc, self).update(** kwargs)
 
     def __init__(self, ** kwargs):
-        super(Host, self).__init__(** kwargs)
+        super(HostDoc, self).__init__(** kwargs)
         self.meta.id = self.address
+
+    def add_tag(self, tag):
+        self.tags = list(set(self.tags or []) | set([tag]))

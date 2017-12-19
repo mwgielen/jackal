@@ -3,7 +3,7 @@ import base64
 import sys
 import grequests
 import gevent
-from jackal import Core
+from jackal import Services
 from jackal.utils import print_success, print_notification, print_error
 from builtins import input
 
@@ -34,34 +34,27 @@ def main():
     """
         Checks the arguments to brutefore and spawns greenlets to perform the bruteforcing.
     """
-    core = Core()
-    if not core.arguments.ports:
-        print_error("Please provide at least one port")
-        sys.exit()
+    services = Services()
+    arguments = services.core_parser.parse_args()
 
-    if not core.arguments.file:
+    if not arguments.file:
         print_error("Please provide a file with credentials seperated by ':'")
         sys.exit()
 
-    hosts = core.get_hosts()
-    if len(hosts) == 1:
-        print_notification("Scanning {} host".format(len(hosts)))
+    if not arguments.port or arguments.search or arguments.tags:
+        services = services.search(search="Tomcat", up=True, tags='!tomcat_brute')
     else:
-        print_notification("Scanning {} hosts".format(len(hosts)))
-
-    port = core.arguments.ports
-    if len(core.arguments.ports.split(',')) > 1:
-        port = int(input("What port do you want to bruteforce [{}]? ".format(core.arguments.ports)))
-    else:
-        port = int(port)
+        services = services.argument_search()
 
     credentials = []
-    with open(core.arguments.file, 'r') as f:
+    with open(arguments.file, 'r') as f:
         credentials = f.readlines()
 
-    for host in hosts:
+    for service in services:
         url = 'http://{}:{}/manager/html'
-        gevent.spawn(brutefore_passwords, host.address, url.format(host.address, port), credentials)
+        gevent.spawn(brutefore_passwords, service.address, url.format(service.address, service.port), credentials)
+        service.add_tag('tomcat_brute')
+        service.update(tags=service.tags)
 
     gevent.wait()
 

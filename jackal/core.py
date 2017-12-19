@@ -6,7 +6,7 @@ from os import isatty
 from elasticsearch_dsl.connections import connections
 
 from jackal.config import Config
-from jackal.documents import Range, Host, Service
+from jackal.documents import RangeDoc, HostDoc, ServiceDoc
 
 
 config = Config()
@@ -16,259 +16,84 @@ connections.create_connection(hosts=[config.host], timeout=20)
 
 class Core(object):
     """
-        Core class that provides the default functionality of all jackal tools.abs
-        The core class provides a way to:
-            - Parse commonly used arguments
-            - Retrieve hosts and ranges from the elasticsearch instance and filter them based on the arguments given.
-            - Create host and range objects from piped input.
+        Provides abstract class to implement new document manager
     """
 
-    def __init__(self, use_pipe=True, arguments=True):
+    def __init__(self, use_pipe=True):
         self.is_pipe = not isatty(sys.stdin.fileno())
-        if arguments:
-            self.arguments = self.core_parser.parse_args()
         self.use_pipe = use_pipe
 
 
-    # Provides all of the given ranges as Range objects
-    def get_ranges(self, save=True):
+    def search(self, number=None, *args, **kwargs):
         """
-            Two options, pipe input or elasticsearch input.
-            Pipe input should be checked to see if its json.
-            Otherwise default to database.
+            Search for objects with the given parameters.
         """
-        ranges = []
-        if self.is_pipe and self.use_pipe:
-            for line in sys.stdin:
-                try:
-                    data = json.loads(line.strip())
-                    r = Range(**data)
-                    r.meta.id = r.range
-                    ranges.append(r)
-                except ValueError:
-                    ranges.append(self.ip_to_range(line.strip(), save))
-
-        else:
-            ranges = self.search_ranges()
-        return ranges
+        raise NotImplementedError('')
 
 
-    def ip_to_range(self, range_ip, save=True):
+    def argument_search(self):
         """
-            Resolves an ip adres to a range object, creating it if it doesn't exists.
+            Uses the command line arguments to fill the search function and call it.
         """
-        result = Range.get(range_ip, ignore=404)
-        if not result:
-            result = Range(range=range_ip)
-            if save:
-                result.save()
-        return result
+        raise NotImplementedError('')
 
 
-    def ip_to_host(self, ip, save=True):
+    def count(self, *args, **kwargs):
         """
-            Resolves an ip adres to a host object, creating it if it doesn't exists.
+            Returns the number of results after filtering with the given arguments.
         """
-        host = Host.get(ip, ignore=404)
-        if not host:
-            host = Host(address=ip)
-            if save:
-                host.save()
-        return host
+        raise NotImplementedError('')
 
 
-    def get_hosts(self, save=True):
+    def argument_count(self):
         """
-            Two types of input, pipe or elasticsearch. See get_ranges
+            Uses the command line arguments to fill the count function and call it.
         """
-        hosts = []
-        # pipe input first
-        if self.is_pipe and self.use_pipe:
-            for line in sys.stdin:
-                # Check for json
-                try:
-                    data = json.loads(line.strip())
-                    host = Host(**data)
-                    host.meta.id = host.address
-                    hosts.append(host)
-                except ValueError:
-                    # ip data will be created if applicable
-                    hosts.append(self.ip_to_host(line.strip(), save))
-
-        else:
-            # Otherwise use the search function.
-            hosts = self.search_hosts()
-        return hosts
+        raise NotImplementedError('')
 
 
-    def get_services(self):
+    def create_search(self, *args, **kwargs):
         """
-            Retrieves the services.
+            Creates an search object from the given arguments.
         """
-        services = []
-        # pipe input first
-        if self.is_pipe and self.use_pipe:
-            for line in sys.stdin:
-                # Check for json
-                try:
-                    data = json.loads(line.strip())
-                    service = Service(**data)
-                    services.append(service)
-                except ValueError:
-                    pass
-
-        else:
-            # Otherwise use the search function.
-            services = self.search_services()
-        return services
+        raise NotImplementedError('')
 
 
-    @property
-    def total_hosts(self):
+    def merge(self, obj):
         """
-            Helper function to return the number of hosts.
+            Function to merge the object with the object in the elasticsearch database.
         """
-        return Host.search().count()
+        raise NotImplementedError('')
 
-    @property
-    def total_ranges(self):
+    # def get(self, arguments=True, *args, **kwargs):
+    #     """
+    #         Retrieves the objects from either the pipe or from elasticsearch.
+    #         If no pipe is available this function will call search or argument search depending on the arguments flag.
+    #     """
+    #     raise NotImplementedError('')
+
+    def id_to_object(self, line):
         """
-            Helper function to return the number of ranges.
         """
-        return Range.search().count()
+        raise NotImplementedError('')
 
 
-    @property
-    def total_services(self):
+    def get_pipe(self, object_type):
         """
-            Helper function to return the number of services.
+            Returns a generator that maps the input of the pipe to an elasticsearch object.
+            Will call id_to_object if it cannot serialize the data from json.
         """
-        return Service.search().count()
+        for line in sys.stdin:
+            try:
+                data = json.loads(line.strip())
+                obj = object_type(**data)
+                yield obj
+            except ValueError:
+                yield self.id_to_object(line)
 
 
-    def search_services(self):
-        """
-            This function will return the services in the elasticsearch instance.
-        """
-        services = []
-        search = Service.search()
-        if self.arguments.tag:
-            for tag in self.arguments.tag.split(','):
-                if tag[0] == '!':
-                    search = search.exclude("term", tags=tag[1:])
-                else:
-                    search = search.filter("term", tags=tag)
-        if self.arguments.up:
-            search = search.filter("term", state='open')
-        if self.arguments.ports:
-            for port in self.arguments.ports.split(','):
-                search = search.filter("match", port=port)
-        if self.arguments.search:
-            for search_argument in self.arguments.search.split(','):
-                search = search.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
-        if self.arguments.range:
-            search = search.filter('term', address=self.arguments.range)
-        if self.arguments.number:
-            response = search[0:self.arguments.number]
-        elif self.arguments.count:
-            return search.count()
-        else:
-            response = search.scan()
-
-        # response = search.scan()
-        for hit in response:
-            services.append(hit)
-        return services
-
-
-    def search_hosts(self):
-        """
-            This function will perform a query on the elasticsearch instance with the given command line arguments.
-            Currently tag, up, port and search arguments are implemented.
-        """
-        hosts = []
-        search = Host.search()
-        if self.arguments.tag:
-            for tag in self.arguments.tag.split(','):
-                if tag[0] == '!':
-                    search = search.exclude("term", tags=tag[1:])
-                else:
-                    search = search.filter("term", tags=tag)
-        if self.arguments.up:
-            search = search.filter("term", tags='up')
-        if self.arguments.ports:
-            for port in self.arguments.ports.split(','):
-                search = search.filter("match", open_ports=port)
-        if self.arguments.search:
-            for search_argument in self.arguments.search.split(','):
-                search = search.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
-        if self.arguments.range:
-            search = search.filter('term', address=self.arguments.range)
-        if self.arguments.number:
-            response = search[0:self.arguments.number]
-        elif self.arguments.count:
-            return search.count()
-        else:
-            response = search.scan()
-
-        for hit in response:
-            hosts.append(hit)
-
-        return hosts
-
-
-    def search_ranges(self):
-        """
-            This function will perform a query on the elasticsearch instance.
-            Currently only tag search is implemented.
-        """
-        search = Range.search()
-        if self.arguments.tag:
-            for tag in self.arguments.tag.split(','):
-                if tag[0] == '!':
-                    search = search.exclude("term", tags=tag[1:])
-                else:
-                    search = search.filter("term", tags=tag)
-
-        ranges = []
-        if self.arguments.number:
-            response = search[0:self.arguments.number]
-        elif self.arguments.count:
-            return search.count()
-        else:
-            response = search.scan()
-
-        for hit in response:
-            ranges.append(hit)
-
-        return ranges
-
-
-    @property
-    def core_parser(self):
-        core_parser = argparse.ArgumentParser(add_help=True)
-        core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
-        core_parser.add_argument('-v', help="Increase verbosity", action="count", default=0)
-        core_parser.add_argument('-s', '--disable-save', help="Don't store the results automatically", action="store_true")
-        core_parser.add_argument('-f', '--file', type=str, help="Input file to use")
-        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
-        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
-        core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
-        core_parser.add_argument('-t', '--tag', type=str, help="Tag(s) to search for, use (!) for not search, comma (,) to seperate tags")
-        core_parser.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
-        core_parser.add_argument('-n', '--number', type=int, help="Limit the result list to this number", action="store")
-        return core_parser
-
-
-    def merge_host(self, host):
-        """
-            Merge the given host with the host in the elasticsearch cluster, all of the arguments are appended.
-            If the host does not exist yet in elastic, it will be created.
-        """
-        self.merge(host, Host, 'address')
-
-
-    def merge(self, new, object_type, id_value):
+    @staticmethod
+    def _merge(new, object_type, id_value):
         """
             Merge
             new: object to be merged.
@@ -293,3 +118,214 @@ class Core(object):
             elastic_object.update(**update)
         else:
             new.save()
+
+    @property
+    def core_parser(self):
+        core_parser = argparse.ArgumentParser(add_help=True)
+        core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
+        core_parser.add_argument('-v', help="Increase verbosity", action="count", default=0)
+        core_parser.add_argument('-s', '--disable-save', help="Don't store the results automatically", action="store_true")
+        core_parser.add_argument('-f', '--file', type=str, help="Input file to use")
+        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
+        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
+        core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
+        core_parser.add_argument('-t', '--tag', type=str, help="Tag(s) to search for, use (!) for not search, comma (,) to seperate tags", dest='tags')
+        core_parser.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
+        core_parser.add_argument('-n', '--number', type=int, help="Limit the result list to this number", action="store", dest='number')
+        return core_parser
+
+
+class Ranges(Core):
+
+
+    def __init__(self, *args, **kwargs):
+        super(Ranges, self).__init__(*args, **kwargs)
+
+
+    def search(self, number=0, *args, **kwargs):
+        search = self.create_search(*args, **kwargs)
+        if number:
+            response = search[0:number]
+        else:
+            response = search.scan()
+
+        for hit in response:
+            yield hit
+
+
+    def merge(self, r):
+        super(Ranges, self)._merge(r, RangeDoc, 'range')
+
+
+    def argument_search(self):
+        arguments = self.core_parser.parse_args()
+        return self.search(tags=arguments.tag)
+
+
+    def count(self, *args, **kwargs):
+        search = self.create_search(*args, **kwargs)
+        return search.count()
+
+
+    def argument_count(self):
+        arguments = self.core_parser.parse_args()
+        return self.count(tags=arguments.tag)
+
+
+    def create_search(self, tags='', *args, **kwargs):
+        search = RangeDoc.search()
+        if tags:
+            for tag in tags.split(','):
+                if tag[0] == '!':
+                    search = search.exclude("term", tags=tag[1:])
+                else:
+                    search = search.filter("term", tags=tag)
+        return search
+
+    def get_ranges(self, arguments=True, *args, **kwargs):
+        if self.is_pipe:
+            return self.get_pipe(RangeDoc)
+        elif arguments:
+            return self.argument_search()
+        else:
+            return self.search(*args, **kwargs)
+
+    def ip_to_range(self, line):
+        """
+            Resolves an ip adres to a range object, creating it if it doesn't exists.
+        """
+        result = RangeDoc.get(line, ignore=404)
+        if not result:
+            result = RangeDoc(range=line)
+            result.save()
+        return result
+
+
+class Hosts(Core):
+
+    def __init__(self, *args, **kwargs):
+        super(Hosts, self).__init__(*args, **kwargs)
+
+    def search(self, number=0, *args, **kwargs):
+        search = self.create_search(*args, **kwargs)
+        if number:
+            response = search[0:number]
+        else:
+            response = search.scan()
+        for hit in response:
+            yield hit
+
+    def merge(self, obj):
+        super(Hosts, self)._merge(obj, HostDoc, 'address')
+
+    def argument_search(self):
+        arguments = self.core_parser.parse_args()
+        return self.search(**vars(arguments))
+
+    def count(self, *args, **kwargs):
+        search = self.create_search(*args, **kwargs)
+        return search.count()
+
+    def argument_count(self):
+        arguments = self.core_parser.parse_args()
+        return self.count(**vars(arguments))
+
+    def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
+        s = HostDoc.search()
+        if tags:
+            for tag in tags.split(','):
+                if tag[0] == '!':
+                    s = s.exclude("term", tags=tag[1:])
+                else:
+                    s = s.filter("term", tags=tag)
+        if up:
+            s = s.filter("term", tags='up')
+        if ports:
+            for port in ports.split(','):
+                s = s.filter("match", open_ports=port)
+        if search:
+            for search_argument in search.split(','):
+                s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        if kwargs.get('range'):
+            s = s.filter('term', address=kwargs.get('range'))
+        return s
+
+    def id_to_object(self, line):
+        host = HostDoc.get(line, ignore=404)
+        if not host:
+            host = HostDoc(address=line)
+            host.save()
+        return host
+
+    def get_hosts(self, arguments=True, *args, **kwargs):
+        if self.is_pipe:
+            return self.get_pipe(HostDoc)
+        elif arguments:
+            return self.argument_search()
+        else:
+            return self.search(*args, **kwargs)
+
+
+class Services(Core):
+
+    def __init__(self, *args, **kwargs):
+        super(Services, self).__init__(*args, **kwargs)
+
+    def search(self, number=None, *args, **kwargs):
+        search = self.create_search(*args, **kwargs)
+        if number:
+            response = search[0:number]
+        else:
+            response = search.scan()
+        
+        for hit in response:
+            yield hit
+
+    def merge(self, obj):
+        # TODO fixme
+        raise NotImplementedError('You should not try to merge services I guess')
+        # super(ServiceCore, self)._merge(obj, Service, '')
+
+    def argument_search(self):
+        arguments = self.core_parser.parse_args()
+        self.search(**vars(arguments))
+
+    def count(self, *args, **kwargs):
+        search = self.create_search(*args, **kwargs)
+        return search.count()
+
+    def argument_count(self):
+        arguments = self.core_parser.parse_args()
+        return self.count(**vars(arguments))
+
+    def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
+        s = ServiceDoc.search()
+        if tags:
+            for tag in tags.split(','):
+                if tag[0] == '!':
+                    s = s.exclude("term", tags=tag[1:])
+                else:
+                    s = s.filter("term", tags=tag)
+        if up:
+            s = s.filter("term", state='open')
+        if ports:
+            for port in ports.split(','):
+                s = s.filter("match", port=port)
+        if search:
+            for search_argument in search.split(','):
+                s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        if kwargs.get('range'):
+            s = s.filter('term', address=kwargs.get('range'))
+        return s
+
+    def get_services(self, arguments=True, *args, **kwargs):
+        if self.is_pipe:
+            return self.get_pipe(ServiceDoc)
+        elif arguments:
+            return self.argument_search()
+        else:
+            return self.search(*args, **kwargs)
+
+    def id_to_object(self, line):
+        # Dont know how to solve this yet.
+        return None
