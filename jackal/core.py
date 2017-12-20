@@ -11,7 +11,7 @@ from jackal.documents import RangeDoc, HostDoc, ServiceDoc
 
 config = Config()
 
-connections.create_connection(hosts=[config.host], timeout=20)
+connections.create_connection(hosts=[config.get('jackal', 'host')], timeout=20)
 
 
 class CoreSearch(object):

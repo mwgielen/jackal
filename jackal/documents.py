@@ -19,7 +19,7 @@ class RangeDoc(DocType):
     updated_at = Date()
 
     class Meta:
-        index = "{}-ranges".format(config.index)
+        index = "{}-ranges".format(config.get('jackal', 'index'))
 
     def save(self, ** kwargs):
         self.created_at = datetime.now()
@@ -64,7 +64,7 @@ class ServiceDoc(DocType):
     tags = Keyword(multi=True)
 
     class Meta:
-        index = "{}-services".format(config.index)
+        index = "{}-services".format(config.get('jackal', 'index'))
 
     def save(self, ** kwargs):
         self.created_at = datetime.now()
@@ -91,6 +91,7 @@ class ServiceDoc(DocType):
         if '_id' in kwargs:
             self.meta.id = kwargs['_id']
 
+
 class HostDoc(DocType):
     """
         This class represents a host object in elasticsearch.
@@ -107,7 +108,7 @@ class HostDoc(DocType):
     filtered_ports = Integer(multi=True)
 
     class Meta:
-        index = "{}-hosts".format(config.index)
+        index = "{}-hosts".format(config.get('jackal', 'index'))
 
     def save(self, ** kwargs):
         self.meta.id = self.address
