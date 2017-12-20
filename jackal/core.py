@@ -190,7 +190,7 @@ class RangeSearch(CoreSearch):
         else:
             return self.search(*args, **kwargs)
 
-    def ip_to_range(self, line):
+    def id_to_object(self, line):
         """
             Resolves an ip adres to a range object, creating it if it doesn't exists.
         """
