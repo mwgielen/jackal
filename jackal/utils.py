@@ -15,6 +15,8 @@ def datetime_handler(x):
 
 
 def print_line(text):
+    import signal
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     """
         Print the given line to stdout
     """
