@@ -14,7 +14,7 @@ config = Config()
 connections.create_connection(hosts=[config.host], timeout=20)
 
 
-class Core(object):
+class CoreSearch(object):
     """
         Provides abstract class to implement new document manager
     """
@@ -135,11 +135,11 @@ class Core(object):
         return core_parser
 
 
-class Ranges(Core):
+class RangeSearch(CoreSearch):
 
 
     def __init__(self, *args, **kwargs):
-        super(Ranges, self).__init__(*args, **kwargs)
+        super(RangeSearch, self).__init__(*args, **kwargs)
 
 
     def search(self, number=0, *args, **kwargs):
@@ -154,7 +154,7 @@ class Ranges(Core):
 
 
     def merge(self, r):
-        super(Ranges, self)._merge(r, RangeDoc, 'range')
+        super(RangeSearch, self)._merge(r, RangeDoc, 'range')
 
 
     def argument_search(self):
@@ -201,10 +201,10 @@ class Ranges(Core):
         return result
 
 
-class Hosts(Core):
+class HostSearch(CoreSearch):
 
     def __init__(self, *args, **kwargs):
-        super(Hosts, self).__init__(*args, **kwargs)
+        super(HostSearch, self).__init__(*args, **kwargs)
 
     def search(self, number=0, *args, **kwargs):
         search = self.create_search(*args, **kwargs)
@@ -216,7 +216,7 @@ class Hosts(Core):
             yield hit
 
     def merge(self, obj):
-        super(Hosts, self)._merge(obj, HostDoc, 'address')
+        super(HostSearch, self)._merge(obj, HostDoc, 'address')
 
     def argument_search(self):
         arguments = self.core_parser.parse_args()
@@ -266,10 +266,10 @@ class Hosts(Core):
             return self.search(*args, **kwargs)
 
 
-class Services(Core):
+class ServiceSearch(CoreSearch):
 
     def __init__(self, *args, **kwargs):
-        super(Services, self).__init__(*args, **kwargs)
+        super(ServiceSearch, self).__init__(*args, **kwargs)
 
     def search(self, number=None, *args, **kwargs):
         search = self.create_search(*args, **kwargs)

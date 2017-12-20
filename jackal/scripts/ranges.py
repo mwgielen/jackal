@@ -2,12 +2,12 @@
 """
 Script to list all of the ranges
 """
-from jackal import Ranges
+from jackal import RangeSearch
 from jackal.utils import print_json, print_line
 
 
 def main():
-    r = Ranges()
+    r = RangeSearch()
     arguments = r.core_parser.parse_args()
     if arguments.count:
         print_line("Number of ranges: {}".format(r.argument_count()))

@@ -5,7 +5,7 @@ import datetime
 import json
 import sys
 from libnmap.parser import NmapParser
-from jackal import Hosts, Services
+from jackal import HostSearch, ServiceSearch
 from jackal import HostDoc, ServiceDoc
 
 def datetime_handler(x):
@@ -58,7 +58,7 @@ def import_nmap(input_file, tag):
     """
         Import the given nmap file, returns the number of imported hosts.
     """
-    core = Hosts(arguments=False)
+    core = HostSearch(arguments=False)
     parser = NmapParser()
     report = parser.parse_fromfile(input_file)
 

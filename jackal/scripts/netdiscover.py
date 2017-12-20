@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
-from jackal import HostDoc, Ranges
+from jackal import HostDoc, RangeSearch
 from jackal.utils import print_line
 
 
@@ -37,7 +37,7 @@ class NetDiscover(object):
                 host.save()
 
 def main():
-    ranges = Ranges()
+    ranges = RangeSearch()
     ranges = ranges.get_ranges()
     for r in ranges:
         discover = NetDiscover(r)

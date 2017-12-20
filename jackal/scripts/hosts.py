@@ -4,12 +4,12 @@ Script to list all of the ranges
 """
 import sys
 
-from jackal import Hosts
+from jackal import HostSearch
 from jackal.utils import print_json, print_line
 
 
 def main():
-    hosts = Hosts()
+    hosts = HostSearch()
     arguments = hosts.core_parser.parse_args()
     if arguments.count:
         print_line("Number of hosts: {}".format(hosts.argument_count()))

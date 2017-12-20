@@ -3,7 +3,7 @@ import base64
 import sys
 import grequests
 import gevent
-from jackal import Services
+from jackal import ServiceSearch
 from jackal.utils import print_success, print_notification, print_error
 from builtins import input
 
@@ -34,7 +34,7 @@ def main():
     """
         Checks the arguments to brutefore and spawns greenlets to perform the bruteforcing.
     """
-    services = Services()
+    services = ServiceSearch()
     arguments = services.core_parser.parse_args()
 
     if not arguments.file:

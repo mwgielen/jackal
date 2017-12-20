@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-from jackal import Services, ServiceDoc
+from jackal import ServiceSearch, ServiceDoc
 from jackal.utils import print_line, print_json
 
 
 def main():
-    services = Services()
+    services = ServiceSearch()
     arguments = services.core_parser.parse_args()
     if arguments.count:
         print_line("Number of services: {}".format(services.argument_count()))

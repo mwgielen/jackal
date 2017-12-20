@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-from jackal.core import Services, Ranges, Hosts, config
+from jackal.core import ServiceSearch, RangeSearch, HostSearch, config
 from jackal.utils import print_notification
 from elasticsearch_dsl.connections import connections
 
 
 def main():
-    services = Services()
-    hosts = Hosts()
-    ranges = Ranges()
+    services = ServiceSearch()
+    hosts = HostSearch()
+    ranges = RangeSearch()
     print_notification("Connected to: {} [{}]".format(connections.get_connection().info()['cluster_name'], config.host))
     print_notification("Index: {}".format(config.index))
     print_notification("Number of hosts defined: {}".format(hosts.count()))
