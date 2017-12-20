@@ -16,7 +16,7 @@ def main():
     else:
         response = hosts.get_hosts()
         for hit in response:
-            print_json(hit.to_dict())
+            print_json(hit.to_dict(include_meta=True))
 
 
 if __name__ == '__main__':
