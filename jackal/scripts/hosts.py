@@ -16,9 +16,7 @@ def main():
     else:
         response = hosts.get_hosts()
         for hit in response:
-            hit = hit.to_dict(include_meta=True)
-            source = hit.pop('_source')
-            print_json({**hit, **source})
+            print_json(hit.to_dict())
 
 
 if __name__ == '__main__':

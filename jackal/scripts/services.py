@@ -11,9 +11,7 @@ def main():
     else:
         response = services.get_services()
         for hit in response:
-            hit = hit.to_dict(include_meta=True)
-            source = hit.pop('_source')
-            print_json({**hit, **source})
+            print_json(hit.to_dict())
 
 
 def overview():

@@ -31,11 +31,21 @@ class RangeDoc(DocType):
         return super(RangeDoc, self).update(** kwargs)
 
     def __init__(self, **kwargs):
-        super(RangeDoc, self).__init__(** kwargs)
+        args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
+        super(RangeDoc, self).__init__(** args)
         self.meta.id = kwargs.get('range', '')
 
     def add_tag(self, tag):
         self.tags = list(set(self.tags or []) | set([tag]))
+
+    def to_dict(self, include_meta=True):
+        result = super(RangeDoc, self).to_dict(include_meta=include_meta)
+        if include_meta:
+            source = result.pop('_source')
+            return {**result, **source}
+        else:
+            return result
+
 
 class ServiceDoc(DocType):
     """
@@ -67,6 +77,20 @@ class ServiceDoc(DocType):
     def add_tag(self, tag):
         self.tags = list(set(self.tags or []) | set([tag]))
 
+    def to_dict(self, include_meta=True):
+        result = super(ServiceDoc, self).to_dict(include_meta=include_meta)
+        if include_meta:
+            source = result.pop('_source')
+            return {**result, **source}
+        else:
+            return result
+
+    def __init__(self, ** kwargs):
+        args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
+        super(ServiceDoc, self).__init__(** args)
+        if '_id' in kwargs:
+            self.meta.id = kwargs['_id']
+
 class HostDoc(DocType):
     """
         This class represents a host object in elasticsearch.
@@ -95,8 +119,17 @@ class HostDoc(DocType):
         return super(HostDoc, self).update(** kwargs)
 
     def __init__(self, ** kwargs):
-        super(HostDoc, self).__init__(** kwargs)
+        args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
+        super(HostDoc, self).__init__(** args)
         self.meta.id = self.address
 
     def add_tag(self, tag):
         self.tags = list(set(self.tags or []) | set([tag]))
+
+    def to_dict(self, include_meta=True):
+        result = super(HostDoc, self).to_dict(include_meta=include_meta)
+        if include_meta:
+            source = result.pop('_source')
+            return {**result, **source}
+        else:
+            return result

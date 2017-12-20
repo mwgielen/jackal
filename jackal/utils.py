@@ -5,7 +5,7 @@ import datetime
 import json
 import sys
 from libnmap.parser import NmapParser
-from jackal import Hosts, Core, Services
+from jackal import Hosts, Services
 from jackal import HostDoc, ServiceDoc
 
 def datetime_handler(x):

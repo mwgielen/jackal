@@ -19,7 +19,7 @@ class Core(object):
         Provides abstract class to implement new document manager
     """
 
-    def __init__(self, use_pipe=True):
+    def __init__(self, use_pipe=True, *args, **kwargs):
         self.is_pipe = not isatty(sys.stdin.fileno())
         self.use_pipe = use_pipe
 
@@ -89,7 +89,7 @@ class Core(object):
                 obj = object_type(**data)
                 yield obj
             except ValueError:
-                yield self.id_to_object(line)
+                yield self.id_to_object(line.strip())
 
 
     @staticmethod
@@ -159,7 +159,7 @@ class Ranges(Core):
 
     def argument_search(self):
         arguments = self.core_parser.parse_args()
-        return self.search(tags=arguments.tag)
+        return self.search(tags=arguments.tags)
 
 
     def count(self, *args, **kwargs):
@@ -288,7 +288,7 @@ class Services(Core):
 
     def argument_search(self):
         arguments = self.core_parser.parse_args()
-        self.search(**vars(arguments))
+        return self.search(**vars(arguments))
 
     def count(self, *args, **kwargs):
         search = self.create_search(*args, **kwargs)

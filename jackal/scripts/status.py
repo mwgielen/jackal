@@ -10,9 +10,9 @@ def main():
     ranges = Ranges()
     print_notification("Connected to: {} [{}]".format(connections.get_connection().info()['cluster_name'], config.host))
     print_notification("Index: {}".format(config.index))
-    print_notification("Number of hosts defined: {}".format(services.count()))
-    print_notification("Number of ranges defined: {}".format(hosts.count()))
-    print_notification("Number of services defined: {}".format(ranges.count()))
+    print_notification("Number of hosts defined: {}".format(hosts.count()))
+    print_notification("Number of ranges defined: {}".format(ranges.count()))
+    print_notification("Number of services defined: {}".format(services.count()))
 
 
 if __name__ == '__main__':

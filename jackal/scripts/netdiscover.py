@@ -24,11 +24,8 @@ class NetDiscover(object):
 
 
     def save(self):
-        # TODO fix
-        tags = self.ip_range.tags or []
-        tags.append('netdiscover')
-        tags = list(set(tags))
-        self.ip_range.update(tags=tags)
+        self.ip_range.add_tag('netdiscover')
+        self.ip_range.update(tags=self.ip_range.tags)
 
         for ip in self.ips:
             host = HostDoc.get(ip, ignore=404)
