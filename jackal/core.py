@@ -329,3 +329,32 @@ class ServiceSearch(CoreSearch):
     def id_to_object(self, line):
         # Dont know how to solve this yet.
         return None
+
+
+class DocMapper(object):
+    """
+        Class that will convert objects from the input pipe to a corresponding doctype.
+        Only works for json input type
+    """
+
+    object_mapping = {'range_doc': RangeDoc, 'host_doc': HostDoc, 'service_doc': ServiceDoc}
+
+    def __init__(self):
+        self.is_pipe = not isatty(sys.stdin.fileno())
+
+
+    def get_pipe(self):
+        """
+            Returns a generator that maps the input of the pipe to an elasticsearch object.
+            Will call id_to_object if it cannot serialize the data from json.
+        """
+        for line in sys.stdin:
+            try:
+                data = json.loads(line.strip())
+                object_type = self.object_mapping[data['_type']]
+                obj = object_type(**data)
+                yield obj
+            except ValueError:
+                pass
+            except KeyError:
+                pass
