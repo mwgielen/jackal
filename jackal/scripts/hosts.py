@@ -2,19 +2,22 @@
 """
 Script to list all of the ranges
 """
-import sys
+import argparse
 
 from jackal import HostSearch
 from jackal.utils import print_json, print_line
 
 
 def main():
-    hosts = HostSearch()
-    arguments = hosts.core_parser.parse_args()
+    hs = HostSearch()
+    arg = argparse.ArgumentParser(parents=[hs.argparser])
+    arg.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
+    arguments = arg.parse_args()
+
     if arguments.count:
-        print_line("Number of hosts: {}".format(hosts.argument_count()))
+        print_line("Number of hosts: {}".format(hs.argument_count()))
     else:
-        response = hosts.get_hosts()
+        response = hs.get_hosts()
         for hit in response:
             print_json(hit.to_dict(include_meta=True))
 

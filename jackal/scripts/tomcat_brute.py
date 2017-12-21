@@ -35,7 +35,7 @@ def main():
         Checks the arguments to brutefore and spawns greenlets to perform the bruteforcing.
     """
     services = ServiceSearch()
-    arguments = services.core_parser.parse_args()
+    arguments = services.argparser.parse_args()
 
     if not arguments.file:
         print_error("Please provide a file with credentials seperated by ':'")

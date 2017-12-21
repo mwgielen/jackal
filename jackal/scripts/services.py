@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-from jackal import ServiceSearch, ServiceDoc
-from jackal.utils import print_line, print_json
+import argparse
+
+from jackal import ServiceDoc, ServiceSearch
+from jackal.utils import print_json, print_line
 
 
 def main():
     services = ServiceSearch()
-    arguments = services.core_parser.parse_args()
+    arg = argparse.ArgumentParser(parents=[services.argparser])
+    arg.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
+    arguments = arg.parse_args()
     if arguments.count:
         print_line("Number of services: {}".format(services.argument_count()))
     else:

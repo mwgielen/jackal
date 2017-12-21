@@ -30,26 +30,26 @@ class CoreSearch(object):
         """
         raise NotImplementedError('')
 
-
     def argument_search(self):
         """
             Uses the command line arguments to fill the search function and call it.
         """
-        raise NotImplementedError('')
-
+        arguments, unknown = self.argparser.parse_known_args()
+        return self.search(**vars(arguments))
 
     def count(self, *args, **kwargs):
         """
             Returns the number of results after filtering with the given arguments.
         """
-        raise NotImplementedError('')
-
+        search = self.create_search(*args, **kwargs)
+        return search.count()
 
     def argument_count(self):
         """
             Uses the command line arguments to fill the count function and call it.
         """
-        raise NotImplementedError('')
+        arguments, unknown = self.argparser.parse_known_args()
+        return self.count(**vars(arguments))
 
 
     def create_search(self, *args, **kwargs):
@@ -121,19 +121,14 @@ class CoreSearch(object):
 
     @property
     def core_parser(self):
-        core_parser = argparse.ArgumentParser(add_help=True)
+        core_parser = argparse.ArgumentParser(add_help=False)
         core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
-        core_parser.add_argument('-v', help="Increase verbosity", action="count", default=0)
-        core_parser.add_argument('-s', '--disable-save', help="Don't store the results automatically", action="store_true")
-        core_parser.add_argument('-f', '--file', type=str, help="Input file to use")
-        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
-        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
-        core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
         core_parser.add_argument('-t', '--tag', type=str, help="Tag(s) to search for, use (!) for not search, comma (,) to seperate tags", dest='tags')
-        core_parser.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
-        core_parser.add_argument('-n', '--number', type=int, help="Limit the result list to this number", action="store", dest='number')
         return core_parser
 
+    @property
+    def argparser(self):
+        raise NotImplementedError('Argparse is not implemented')
 
 class RangeSearch(CoreSearch):
 
@@ -155,21 +150,6 @@ class RangeSearch(CoreSearch):
 
     def merge(self, r):
         super(RangeSearch, self)._merge(r, RangeDoc, 'range')
-
-
-    def argument_search(self):
-        arguments = self.core_parser.parse_args()
-        return self.search(tags=arguments.tags)
-
-
-    def count(self, *args, **kwargs):
-        search = self.create_search(*args, **kwargs)
-        return search.count()
-
-
-    def argument_count(self):
-        arguments = self.core_parser.parse_args()
-        return self.count(tags=arguments.tag)
 
 
     def create_search(self, tags='', *args, **kwargs):
@@ -200,6 +180,13 @@ class RangeSearch(CoreSearch):
             result.save()
         return result
 
+    @property
+    def argparser(self):
+        """
+            Argparser option with search functionality specific for ranges.
+        """
+        return self.core_parser
+
 
 class HostSearch(CoreSearch):
 
@@ -218,17 +205,6 @@ class HostSearch(CoreSearch):
     def merge(self, obj):
         super(HostSearch, self)._merge(obj, HostDoc, 'address')
 
-    def argument_search(self):
-        arguments = self.core_parser.parse_args()
-        return self.search(**vars(arguments))
-
-    def count(self, *args, **kwargs):
-        search = self.create_search(*args, **kwargs)
-        return search.count()
-
-    def argument_count(self):
-        arguments = self.core_parser.parse_args()
-        return self.count(**vars(arguments))
 
     def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
         s = HostDoc.search()
@@ -265,6 +241,17 @@ class HostSearch(CoreSearch):
         else:
             return self.search(*args, **kwargs)
 
+    @property
+    def argparser(self):
+        """
+            Argparser option with search functionality specific for hosts.
+        """
+        core_parser = self.core_parser
+        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
+        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
+        core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
+        return core_parser
+
 
 class ServiceSearch(CoreSearch):
 
@@ -286,17 +273,6 @@ class ServiceSearch(CoreSearch):
         raise NotImplementedError('You should not try to merge services I guess')
         # super(ServiceCore, self)._merge(obj, Service, '')
 
-    def argument_search(self):
-        arguments = self.core_parser.parse_args()
-        return self.search(**vars(arguments))
-
-    def count(self, *args, **kwargs):
-        search = self.create_search(*args, **kwargs)
-        return search.count()
-
-    def argument_count(self):
-        arguments = self.core_parser.parse_args()
-        return self.count(**vars(arguments))
 
     def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
         s = ServiceDoc.search()
@@ -329,6 +305,17 @@ class ServiceSearch(CoreSearch):
     def id_to_object(self, line):
         # Dont know how to solve this yet.
         return None
+
+    @property
+    def argparser(self):
+        """
+            Argparser option with search functionality specific for hosts.
+        """
+        core_parser = self.core_parser
+        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
+        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
+        core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
+        return core_parser
 
 
 class DocMapper(object):
