@@ -25,10 +25,14 @@ class CoreSearch(object):
 
 
     def search(self, number=None, *args, **kwargs):
-        """
-            Search for objects with the given parameters.
-        """
-        raise NotImplementedError('')
+        search = self.create_search(*args, **kwargs)
+        if number:
+            response = search[0:number]
+        else:
+            response = search.scan()
+
+        for hit in response:
+            yield hit
 
     def argument_search(self):
         """
@@ -37,12 +41,14 @@ class CoreSearch(object):
         arguments, unknown = self.argparser.parse_known_args()
         return self.search(**vars(arguments))
 
+
     def count(self, *args, **kwargs):
         """
             Returns the number of results after filtering with the given arguments.
         """
         search = self.create_search(*args, **kwargs)
         return search.count()
+
 
     def argument_count(self):
         """
@@ -130,22 +136,12 @@ class CoreSearch(object):
     def argparser(self):
         raise NotImplementedError('Argparse is not implemented')
 
+
 class RangeSearch(CoreSearch):
 
 
     def __init__(self, *args, **kwargs):
         super(RangeSearch, self).__init__(*args, **kwargs)
-
-
-    def search(self, number=0, *args, **kwargs):
-        search = self.create_search(*args, **kwargs)
-        if number:
-            response = search[0:number]
-        else:
-            response = search.scan()
-
-        for hit in response:
-            yield hit
 
 
     def merge(self, r):
@@ -193,14 +189,6 @@ class HostSearch(CoreSearch):
     def __init__(self, *args, **kwargs):
         super(HostSearch, self).__init__(*args, **kwargs)
 
-    def search(self, number=0, *args, **kwargs):
-        search = self.create_search(*args, **kwargs)
-        if number:
-            response = search[0:number]
-        else:
-            response = search.scan()
-        for hit in response:
-            yield hit
 
     def merge(self, obj):
         super(HostSearch, self)._merge(obj, HostDoc, 'address')
@@ -258,15 +246,6 @@ class ServiceSearch(CoreSearch):
     def __init__(self, *args, **kwargs):
         super(ServiceSearch, self).__init__(*args, **kwargs)
 
-    def search(self, number=None, *args, **kwargs):
-        search = self.create_search(*args, **kwargs)
-        if number:
-            response = search[0:number]
-        else:
-            response = search.scan()
-        
-        for hit in response:
-            yield hit
 
     def merge(self, obj):
         # TODO fixme
