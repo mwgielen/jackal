@@ -1,13 +1,16 @@
 from setuptools import setup
 
 setup(name='jackal',
-      version='0.3.3',
+      version='0.3.4',
       description='Jackal provides a way to store results from hacking tools in a single place.',
       author='Matthijs Gielen',
       author_email='github@mwgielen.com',
       url='https://github.com/mwgielen/jackal/',
       packages=['jackal', 'jackal.scripts'],
       install_requires=['elasticsearch_dsl', 'python-libnmap', 'future', 'gevent', 'grequests', 'requests'],
+      extras_require={
+          'Sniffer': ["psutil", "scapy-python3"]
+      },
       entry_points={
           'console_scripts': [
               'jk-status = jackal.scripts.status:main',
@@ -24,5 +27,6 @@ setup(name='jackal',
               'jk-add-tag = jackal.scripts.tags:add_tag',
               'jk-nessus = jackal.scripts.nessus:main',
               'jk-nmap-discover = jackal.scripts.nmap:nmap_discover',
+              'jk-sniffer = jackal.scripts.sniffer:main',
           ]
       })
