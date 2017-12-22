@@ -94,7 +94,7 @@ def nmap_discover():
         nmap_args.append('-sL')
         check_function = include_hostnames
 
-    if arguments.tags:
+    if arguments.tags or rs.is_pipe:
         ranges = rs.get_ranges()
     else:
         ranges = rs.search(tags='!{}'.format(tag))

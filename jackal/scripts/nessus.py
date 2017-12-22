@@ -15,6 +15,8 @@ class Nessus(object):
             "X-ApiKeys": "accessKey = {}; secretKey = {};".format(access, secret),
             "content-type": "application/json"
         }
+        if not url.endswith('/'):
+            url += '/'
         self.url = url
         self.template_name = template_name
 
@@ -63,7 +65,12 @@ def main():
     """
     config = Config()
     core = HostSearch()
-    hosts = core.get_hosts()
+    arguments = core.argparser.parse_args()
+    if arguments.tags or arguments.up or arguments.ports or arguments.search or arguments.range or core.is_pipe:
+        hosts = core.get_hosts()
+    else:
+        hosts = core.search(tags='!nessus')
+
     host_ips = ",".join([host.address for host in hosts])
 
     url = config.get('nessus', 'host')

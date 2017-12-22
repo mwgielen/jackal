@@ -38,7 +38,12 @@ class NetDiscover(object):
 
 def main():
     ranges = RangeSearch()
-    ranges = ranges.get_ranges()
+    arguments = ranges.argparser.parse_args()
+    if arguments.tags or ranges.is_pipe:
+        ranges = ranges.get_ranges()
+    else:
+        ranges = ranges.search(tags='!netdiscover')
+
     for r in ranges:
         discover = NetDiscover(r)
         discover.execute()

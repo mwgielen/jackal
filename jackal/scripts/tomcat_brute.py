@@ -41,10 +41,10 @@ def main():
         print_error("Please provide a file with credentials seperated by ':'")
         sys.exit()
 
-    if not arguments.port or arguments.search or arguments.tags:
-        services = services.search(search="Tomcat", up=True, tags='!tomcat_brute')
+    if arguments.port or arguments.search or arguments.tags or services.is_pipe:
+        services = services.get_services()
     else:
-        services = services.argument_search()
+        services = services.search(search="Tomcat", up=True, tags='!tomcat_brute')
 
     credentials = []
     with open(arguments.file, 'r') as f:

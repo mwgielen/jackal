@@ -127,7 +127,7 @@ class CoreSearch(object):
 
     @property
     def core_parser(self):
-        core_parser = argparse.ArgumentParser(add_help=False)
+        core_parser = argparse.ArgumentParser(add_help=True)
         core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
         core_parser.add_argument('-t', '--tag', type=str, help="Tag(s) to search for, use (!) for not search, comma (,) to seperate tags", dest='tags')
         return core_parser
