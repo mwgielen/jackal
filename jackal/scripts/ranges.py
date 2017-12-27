@@ -10,7 +10,7 @@ from jackal.utils import print_json, print_line
 
 def main():
     rs = RangeSearch()
-    arg = argparse.ArgumentParser(parents=[rs.argparser])
+    arg = argparse.ArgumentParser(parents=[rs.argparser], conflict_handler='resolve')
     arg.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
     arguments = arg.parse_args()
     if arguments.count:

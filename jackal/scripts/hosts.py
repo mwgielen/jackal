@@ -10,7 +10,7 @@ from jackal.utils import print_json, print_line
 
 def main():
     hs = HostSearch()
-    arg = argparse.ArgumentParser(parents=[hs.argparser])
+    arg = argparse.ArgumentParser(parents=[hs.argparser], conflict_handler='resolve')
     arg.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
     arguments = arg.parse_args()
 

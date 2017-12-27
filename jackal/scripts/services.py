@@ -7,7 +7,7 @@ from jackal.utils import print_json, print_line
 
 def main():
     services = ServiceSearch()
-    arg = argparse.ArgumentParser(parents=[services.argparser])
+    arg = argparse.ArgumentParser(parents=[services.argparser], conflict_handler='resolve')
     arg.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
     arguments = arg.parse_args()
     if arguments.count:
