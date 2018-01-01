@@ -1,10 +1,17 @@
 from setuptools import setup
 
 setup(name='jackal',
-      version='0.3.6',
+      version='0.3.7',
       description='Jackal provides a way to store results from hacking tools in a single place.',
       author='Matthijs Gielen',
       author_email='github@mwgielen.com',
+      license='MIT',
+      classifiers=[
+          'Development Status :: 3 - Alpha',
+          'License :: OSI Approved :: MIT License',
+          'Programming Language :: Python :: 3 :: Only'
+      ],
+      requires_python='>=3',
       url='https://github.com/mwgielen/jackal/',
       packages=['jackal', 'jackal.scripts'],
       install_requires=['elasticsearch_dsl', 'python-libnmap', 'future', 'gevent', 'grequests', 'requests'],
