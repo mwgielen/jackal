@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from elasticsearch_dsl import (Date, DocType, InnerObjectWrapper, Integer, Ip,
+from elasticsearch_dsl import (Date, DocType, Integer, Ip,
                                Keyword, Object, Text)
 from jackal.config import Config
 

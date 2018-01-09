@@ -46,7 +46,7 @@ def format():
         Formats the output of another tool in the given way.
         Has default styles for ranges, hosts and services.
     """
-    service_style = "{address:15} {port:7} {protocol:5} {service:15} {state:10} {banner}"
+    service_style = "{address:15} {port:7} {protocol:5} {service:15} {state:10} {banner} {tags}"
     host_style = "{address:15} {tags}"
     ranges_style = "{range:18} {tags}"
     if len(sys.argv) > 1:

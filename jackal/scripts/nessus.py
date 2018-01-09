@@ -70,7 +70,7 @@ def main():
         hosts = core.get_hosts()
     else:
         hosts = core.search(tags='!nessus')
-
+    hosts = [host for host in hosts]
     host_ips = ",".join([host.address for host in hosts])
 
     url = config.get('nessus', 'host')

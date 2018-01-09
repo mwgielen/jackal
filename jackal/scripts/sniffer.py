@@ -108,12 +108,13 @@ def main():
             for detail in details:
                 if detail.family == AddressFamily.AF_INET:
                     ip_address = ipaddress.ip_address(detail.address)
-                    if not ip_address.is_link_local:
+                    if not (ip_address.is_link_local or ip_address.is_loopback):
                         netmask = detail.netmask
                         own_ip = str(ip_address)
+        print_notification('Found netmask: {} and own ip: {}'.format(netmask, own_ip))
     except ImportError:
-        pass
-
+        print_error("Could not find my own ip, consider installing the 'psutil' package.")
+    print_notification("Starting sniffer with netmask: {} and own_ip: {}".format(netmask, own_ip))
     sniffer = Sniffer(netmask=netmask, own_ip=own_ip)
     sniffer.start()
 
