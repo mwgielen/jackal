@@ -65,11 +65,7 @@ def main():
     """
     config = Config()
     core = HostSearch()
-    arguments = core.argparser.parse_args()
-    if arguments.tags or arguments.up or arguments.ports or arguments.search or arguments.range or core.is_pipe:
-        hosts = core.get_hosts()
-    else:
-        hosts = core.search(tags='!nessus')
+    hosts = core.get_hosts(tags='!nessus')
     hosts = [host for host in hosts]
     host_ips = ",".join([host.address for host in hosts])
 

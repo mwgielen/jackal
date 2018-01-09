@@ -158,10 +158,11 @@ class RangeSearch(CoreSearch):
                     search = search.filter("term", tags=tag)
         return search
 
-    def get_ranges(self, arguments=True, *args, **kwargs):
+    def get_ranges(self, *args, **kwargs):
+        arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe:
             return self.get_pipe(RangeDoc)
-        elif arguments:
+        elif arguments.range or arguments.tags:
             return self.argument_search()
         else:
             return self.search(*args, **kwargs)
@@ -221,10 +222,11 @@ class HostSearch(CoreSearch):
             host.save()
         return host
 
-    def get_hosts(self, arguments=True, *args, **kwargs):
+    def get_hosts(self, *args, **kwargs):
+        arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe:
             return self.get_pipe(HostDoc)
-        elif arguments:
+        elif arguments.range or arguments.tags or arguments.search or arguments.ports or arguments.up:
             return self.argument_search()
         else:
             return self.search(*args, **kwargs)
@@ -273,10 +275,11 @@ class ServiceSearch(CoreSearch):
             s = s.filter('term', address=kwargs.get('range'))
         return s
 
-    def get_services(self, arguments=True, *args, **kwargs):
+    def get_services(self, *args, **kwargs):
+        arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe:
             return self.get_pipe(ServiceDoc)
-        elif arguments:
+        elif arguments.range or arguments.tags or arguments.search or arguments.ports or arguments.up:
             return self.argument_search()
         else:
             return self.search(*args, **kwargs)

