@@ -4,6 +4,7 @@
 import datetime
 import json
 import sys
+import string
 from libnmap.parser import NmapParser
 from jackal import HostSearch, ServiceSearch
 from jackal import HostDoc, ServiceDoc
@@ -88,3 +89,22 @@ def import_nmap(input_file, tag):
         core.merge(host)
 
     return imported_hosts
+
+
+# from https://gist.github.com/navarroj/7689682
+class PartialFormatter(string.Formatter):
+    def __init__(self, missing='~'):
+        self.missing = missing
+
+    def get_field(self, field_name, args, kwargs):
+        # Handle missing fields
+        try:
+            return super().get_field(field_name, args, kwargs)
+        except (KeyError, AttributeError):
+            return None, field_name
+
+    def format_field(self, value, spec):
+        if value is None:
+            return self.missing
+        else:
+            return super().format_field(value, spec)
