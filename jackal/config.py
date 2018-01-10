@@ -16,6 +16,13 @@ def input_with_default(question, default):
     """
     return input(question + ' [{}] '.format(default)) or default
 
+def required_input(question):
+    while True:
+        result = input(question)
+        if result:
+            return result
+        print("This option is required")
+
 
 def manual_configure():
     """
@@ -40,7 +47,62 @@ def manual_configure():
         config.set('nessus', 'access_key', nessus_access)
         config.set('nessus', 'secret_key', nessus_secret)
 
+    configure_pipes = (input_with_default("Do you want to setup named pipes?", 'n').lower() == 'y')
+    if configure_pipes:
+        directory = input_with_default("What directory do you want to place the named pipes in?", config.get('pipes', 'directory'))
+        config.set('pipes', 'directory', directory)
+        config_file = input_with_default("What is the name of the named pipe config?", config.get('pipes', 'config_file'))
+        config.set('pipes', 'config_file', config_file)
+        if not os.path.exists(directory):
+            create = (input_with_default("Do you want to create the directory?", 'n').lower() == 'y')
+            if create:
+                os.makedirs(directory)
+        if not os.path.exists(os.path.join(config.config_dir, config_file)):
+            f = open(os.path.join(config.config_dir, config_file), 'a')
+            f.close()
+
     config.write_config(initialize_indices)
+
+
+def add_named_pipe():
+    """
+    """
+    config = Config()
+    pipes_config = config.get('pipes', 'config_file')
+    pipes_config_path = os.path.join(config.config_dir, pipes_config)
+    if not os.path.exists(pipes_config_path):
+        print("First configure named pipes with jk-configure")
+        return
+
+    name = required_input("What is the name of the named pipe? ")
+    object_type = input_with_default("What is the type of the named pipe? Pick from: [host, range, service]", 'service')
+    ports = input_with_default("What ports do you want to filter on? Empty for disable", '')
+    tags = input_with_default("What tags do you want to filter on? Empty for disable", '')
+    search = input_with_default("What search query do you want to use?", '')
+    up = (input_with_default("Do you want to include only up hosts/services?", 'n').lower() == 'y')
+    unique = (input_with_default("Do you want to only show unique results?", 'n').lower() == 'y')
+    output_format = input_with_default("How do you want the results to be formatted?", '{address}')
+
+    print("Adding new named pipe")
+    pipes_config = configparser.ConfigParser()
+    pipes_config.read(pipes_config_path)
+
+    pipes_config[name] = {}
+    pipes_config[name]['type'] = object_type
+    if ports:
+        pipes_config[name]['ports'] = ports
+    if search:
+        pipes_config[name]['search'] = search
+    if tags:
+        pipes_config[name]['tags'] = tags
+    if up:
+        pipes_config[name]['up'] = '1'
+    if unique:
+        pipes_config[name]['unique'] = '1'
+
+    pipes_config[name]['format'] = output_format
+    with open(pipes_config_path, 'w') as f:
+        pipes_config.write(f)
 
 
 class Config(object):
@@ -60,7 +122,12 @@ class Config(object):
                 'template_name': 'advanced',
                 'access_key': '',
                 'secret_key': '',
-            }
+            },
+        'pipes':
+            {
+                'directory': os.getcwd(),
+                'config_file': 'pipes.ini'
+            },
         }
 
     def __init__(self):

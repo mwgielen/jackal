@@ -75,6 +75,30 @@ jk-sniffer
 ```
 These tools will include the tag in the found hosts and ranges to indicate which tool found it.
 
+### Named pipes
+Jackal has a build in named pipe server, this server can be used to give access to the data of jackal in other tools.
+To start using it first configure the usage with jk-configure, after add new pipes to the config file or use the jk-add-named-pipe tool.
+An example of a named pipe config is shown below:
+
+```
+[smb]
+type = service
+ports = 445
+up = 1
+unique = 1
+format = {address}
+```
+
+After configuring named pipes start the jk-named-pipe tool. It will show the named pipes that are configured and will indicate what pipes are accessed.
+Now the pipes can be used in other programs, for example cat or in msfconsole by using the 'file:' option.
+
+```
+    set RHOSTS file:/path/to/pipes/dir/smb
+```
+
+Metasploit will then access the file to get the hosts from the file.
+
+
 ## Building your own tools
 Jackal provides a multiple classes to interact with the elasticsearch instance. If you want to include jackal in your own tool it's as simple as importing one of these classes.
 All of these classes share the Core class. This means that these classes share most of the functionality.
