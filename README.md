@@ -107,15 +107,20 @@ from jackall import RangeSearch, HostSearch, ServiceSearch
 from jackal.utils import print_json
 
 ranges = RangeSearch()
+# Ranges will be obtained from the pipe, user given search parameters or all ranges.
 for r in ranges.get_ranges():
-    print_json(r.to_dict())
+    # The include_meta parameter will include more information about the type, index and others.
+    print_json(r.to_dict(include_meta=True))
 
-hosts = HostSearch()
-for h in hosts.get_hosts():
+# Disables the pipe
+hosts = HostSearch(use_pipe=False)
+# Optional search options can be given, if a user gives no search parameters, these will be used.
+for h in hosts.get_hosts(ports='445'):
     print_json(h.to_dict())
 
 services = ServiceSearch()
-for s in services.get_services():
+# The search function will always honor the given arguments, user input and piped objects are ignored.
+for s in services.search(ports='445'):
     print_json(s.to_dict())
 ```
 

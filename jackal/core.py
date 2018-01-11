@@ -160,7 +160,7 @@ class RangeSearch(CoreSearch):
 
     def get_ranges(self, *args, **kwargs):
         arguments, _ = self.argparser.parse_known_args()
-        if self.is_pipe:
+        if self.is_pipe and self.use_pipe:
             return self.get_pipe(RangeDoc)
         elif arguments.range or arguments.tags:
             return self.argument_search()
@@ -224,7 +224,7 @@ class HostSearch(CoreSearch):
 
     def get_hosts(self, *args, **kwargs):
         arguments, _ = self.argparser.parse_known_args()
-        if self.is_pipe:
+        if self.is_pipe and self.use_pipe:
             return self.get_pipe(HostDoc)
         elif arguments.range or arguments.tags or arguments.search or arguments.ports or arguments.up:
             return self.argument_search()
@@ -277,7 +277,7 @@ class ServiceSearch(CoreSearch):
 
     def get_services(self, *args, **kwargs):
         arguments, _ = self.argparser.parse_known_args()
-        if self.is_pipe:
+        if self.is_pipe and self.use_pipe:
             return self.get_pipe(ServiceDoc)
         elif arguments.range or arguments.tags or arguments.search or arguments.ports or arguments.up:
             return self.argument_search()
