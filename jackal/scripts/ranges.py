@@ -4,7 +4,7 @@ Script to list all of the ranges
 """
 import argparse
 
-from jackal import RangeSearch
+from jackal import RangeSearch, HostDoc
 from jackal.utils import print_json, print_line
 
 
@@ -20,6 +20,27 @@ def main():
         for hit in response:
             print_json(hit.to_dict(include_meta=True))
 
+def overview():
+    """
+        Creates a overview of the hosts per range.
+    """
+    range_search = RangeSearch()
+    ranges = range_search.get_ranges()
+    formatted_ranges = []
+    tags_lookup = {}
+    for r in ranges:
+        formatted_ranges.append({'mask': r.range})
+        tags_lookup[r.range] = r.tags
+    search = HostDoc.search()
+    search.aggs.bucket('hosts', 'ip_range', field='address', ranges=formatted_ranges)
+    response = search.execute()
+    print_line("{0:<18} {1:<6} {2}".format("Range", "Count", "Tags"))
+    print_line("-" * 60)
+    for entry in response.aggregations.hosts.buckets:
+        print_line("{0:<18} {1:<6} {2}".format(entry.key, entry.doc_count, tags_lookup[entry.key]))
+
+
+
 
 if __name__ == '__main__':
-    main()
+    overview()
