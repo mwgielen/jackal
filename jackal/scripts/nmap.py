@@ -94,20 +94,19 @@ def nmap_discover():
         nmap_args.append('-sL')
         check_function = include_hostnames
 
-    if arguments.tags or rs.is_pipe:
-        ranges = rs.get_ranges()
-    else:
-        ranges = rs.search(tags='!{}'.format(tag))
-
+    ranges = rs.get_ranges(tags='!{}'.format(tag))
+    ranges = [r for r in ranges]
     ips = []
     for r in ranges:
         ips.append(r.range)
-        r.add_tag(tag)
-        rs.merge(r)
 
     result = nmap(" ".join(nmap_args), ips)
     import_nmap(result, tag, check_function)
 
+    for r in ranges:
+        ips.append(r.range)
+        r.add_tag(tag)
+        rs.merge(r)
 
 if __name__ == '__main__':
     nmap_discover()
