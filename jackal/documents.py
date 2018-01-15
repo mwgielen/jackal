@@ -38,6 +38,9 @@ class RangeDoc(DocType):
     def add_tag(self, tag):
         self.tags = list(set(self.tags or []) | set([tag]))
 
+    def remove_tag(self, tag):
+        self.tags = list(set(self.tags or []) - set([tag]))
+
     def to_dict(self, include_meta=False):
         result = super(RangeDoc, self).to_dict(include_meta=include_meta)
         if include_meta:
@@ -76,6 +79,9 @@ class ServiceDoc(DocType):
 
     def add_tag(self, tag):
         self.tags = list(set(self.tags or []) | set([tag]))
+
+    def remove_tag(self, tag):
+        self.tags = list(set(self.tags or []) - set([tag]))
 
     def to_dict(self, include_meta=False):
         result = super(ServiceDoc, self).to_dict(include_meta=include_meta)
@@ -126,6 +132,9 @@ class HostDoc(DocType):
 
     def add_tag(self, tag):
         self.tags = list(set(self.tags or []) | set([tag]))
+
+    def remove_tag(self, tag):
+        self.tags = list(set(self.tags or []) - set([tag]))
 
     def to_dict(self, include_meta=False):
         result = super(HostDoc, self).to_dict(include_meta=include_meta)
