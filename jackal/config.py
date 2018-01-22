@@ -36,6 +36,9 @@ def manual_configure():
     config.set('jackal', 'index', index)
     initialize_indices = (input_with_default("Do you want to initialize the indices?", 'n').lower() == 'y')
 
+    nmap_options = input_with_default("What nmap options do you want to set for 'custom' (for example '-p 22,445')?", config.get('nmap', 'options'))
+    config.set('nmap', 'options', nmap_options)
+
     configure_nessus = (input_with_default("Do you want to setup nessus?", 'n').lower() == 'y')
     if configure_nessus:
         nessus_host = input_with_default("What is the nessus host?", config.get('nessus', 'host'))
@@ -128,6 +131,10 @@ class Config(object):
                 'directory': os.getcwd(),
                 'config_file': 'pipes.ini'
             },
+        'nmap':
+            {
+                'options': '',
+            }
         }
 
     def __init__(self):

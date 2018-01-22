@@ -7,6 +7,7 @@ from libnmap.process import NmapProcess
 
 from jackal import HostDoc, HostSearch, RangeSearch, ServiceDoc
 from jackal.utils import print_error, print_notification, print_success
+from jackal.config import Config
 
 
 def all_hosts(*args, **kwargs):
@@ -86,7 +87,6 @@ def nmap(nmap_args, ips):
     """
         Start an nmap process with the given args on the given ips.
     """
-    print_notification("Running nmap with args: {} on {} range(s)".format(nmap_args, len(ips)))
     nm = NmapProcess(targets=ips, options=nmap_args)
     print_notification("Invoking sudo")
     nm.sudo_run()
@@ -124,7 +124,9 @@ def nmap_discover():
     for r in ranges:
         ips.append(r.range)
 
-    result = nmap(" ".join(nmap_args), ips)
+    nmap_args= " ".join(nmap_args)
+    print_notification("Running nmap with args: {} on {} range(s)".format(nmap_args, len(ips)))
+    result = nmap(nmap_args, ips)
     import_nmap(result, tag, check_function)
 
     for r in ranges:
@@ -132,5 +134,46 @@ def nmap_discover():
         r.add_tag(tag)
         rs.merge(r)
 
+
+def nmap_scan():
+    """
+        Scans the given hosts with nmap.
+    """
+    # Create the search and config objects
+    hs = HostSearch()
+    config = Config()
+
+    # Static options to be able to figure out what options to use depending on the input the user gives.
+    nmap_types = ['top10', 'top100', 'custom', 'top1000', 'all']
+    options = {'top10':'--top-ports 10', 'top100':'--top-ports 100', 'custom': config.get('nmap', 'options'), 'top1000': '--top-ports 1000', 'all': '-p-'}
+
+    # Create an argument parser
+    hs_parser = hs.argparser
+    argparser = argparse.ArgumentParser(parents=[hs_parser], conflict_handler='resolve', \
+    description="Scans hosts from the database using nmap, any arguments that are not in the help are passed to nmap")
+    argparser.add_argument('type', metavar='type', \
+        help='The number of ports to scan: top10, top100, custom, top1000 (default) or all', \
+        type=str, choices=nmap_types, default='top1000', const='top1000', nargs='?')
+    arguments, extra_nmap_args = argparser.parse_known_args()
+
+    # Fix the tags for the search
+    tags = nmap_types[nmap_types.index(arguments.type):]
+    tags = "!nmap_" + ",!nmap_".join(tags)
+
+    hosts = hs.get_hosts(tags=tags)
+
+    # Create the nmap arguments
+    nmap_args = []
+    nmap_args.extend(extra_nmap_args)
+    nmap_args.append(options[arguments.type])
+    nmap_args = " ".join(nmap_args)
+
+    # Run nmap
+    print_notification("Running nmap with args: {} on {} hosts(s)".format(nmap_args, len(hosts)))
+    result = nmap(nmap_args, [h.address for h in hosts])
+    # Import the nmap result
+    import_nmap(result, "nmap_{}".format(arguments.type), check_function=all_hosts, import_services=True)
+
+
 if __name__ == '__main__':
-    nmap_discover()
+    nmap_scan()

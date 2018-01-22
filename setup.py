@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='jackal',
-      version='0.4.7',
+      version='0.4.8',
       description='Jackal provides a way to store results from hacking tools in a single place.',
       author='Matthijs Gielen',
       author_email='github@mwgielen.com',
@@ -34,6 +34,7 @@ setup(name='jackal',
               'jk-remove-tag = jackal.scripts.tags:remove_tag',
               'jk-nessus = jackal.scripts.nessus:main',
               'jk-nmap-discover = jackal.scripts.nmap:nmap_discover',
+              'jk-nmap = jackal.scripts.nmap:nmap_scan',
               'jk-named-pipes = jackal.scripts.named_pipes:main',
               'jk-add-named-pipe = jackal.config:add_named_pipe',
           ]
