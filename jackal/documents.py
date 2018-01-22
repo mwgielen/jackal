@@ -112,6 +112,7 @@ class HostDoc(DocType):
     open_ports = Integer(multi=True)
     closed_ports = Integer(multi=True)
     filtered_ports = Integer(multi=True)
+    status = Keyword()
 
     class Meta:
         index = "{}-hosts".format(config.get('jackal', 'index'))

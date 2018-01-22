@@ -1,21 +1,33 @@
 #!/usr/bin/env python3
 import argparse
+import sys
 
-from libnmap.parser import NmapParser
+from libnmap.parser import NmapParser, NmapParserException
 from libnmap.process import NmapProcess
 
-from jackal import HostDoc, HostSearch, RangeSearch
-from jackal.utils import print_notification, print_success, print_error
+from jackal import HostDoc, HostSearch, RangeSearch, ServiceDoc
+from jackal.utils import print_error, print_notification, print_success
 
 
-def all_hosts(**kwargs):
+def all_hosts(*args, **kwargs):
     """
         Returns true for all nmap hosts
     """
     return True
 
+def import_file():
+    for arg in sys.argv[1:]:
+        print_notification("Importing nmap file: {}".format(arg))
+        try:
+            with open(arg, 'r') as f:
+                import_nmap(f.read(), 'nmap_import', check_function=all_hosts, import_services=True)
+        except NmapParserException:
+            print_error("File could not be parsed: {}".format(arg))
+        except FileNotFoundError:
+            pass
 
-def import_nmap(result, tag, check_function=all_hosts):
+
+def import_nmap(result, tag, check_function=all_hosts, import_services=False):
     """
         Imports the given nmap result.
     """
@@ -29,10 +41,22 @@ def import_nmap(result, tag, check_function=all_hosts):
             host = HostDoc()
             host.address = nmap_host.address
             host.add_tag(tag)
+            host.status = nmap_host.status
             if nmap_host.os_fingerprinted:
                 host.os = nmap_host.os_fingerprint
             if nmap_host.hostnames:
                 host.hostname = nmap_host.hostnames
+            if import_services:
+                for service in nmap_host.services:
+                    serv = ServiceDoc(**service.get_dict())
+                    serv.address = nmap_host.address
+                    serv.save()
+                    if service.state == 'open':
+                        host.open_ports.append(service.port)
+                    if service.state == 'closed':
+                        host.closed_ports.append(service.port)
+                    if service.state == 'filtered':
+                        host.filtered_ports.append(service.port)
             hs.merge(host)
     if imports:
         print_success("Imported {} hosts, with tag {}".format(imports, tag))
@@ -49,7 +73,7 @@ def include_hostnames(nmap_host):
     return False
 
 
-def include_pinged_hosts(nmap_host):
+def include_up_hosts(nmap_host):
     """
         Includes only hosts that have the status 'up'
     """
@@ -88,7 +112,7 @@ def nmap_discover():
     if arguments.type == 'ping':
         tag = 'nmap_ping'
         nmap_args.append('-sn')
-        check_function = include_pinged_hosts
+        check_function = include_up_hosts
     elif arguments.type == 'lookup':
         tag = 'nmap_lookup'
         nmap_args.append('-sL')

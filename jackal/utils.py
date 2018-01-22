@@ -70,7 +70,8 @@ def import_nmap(input_file, tag):
         imported_hosts += 1
         host = HostDoc()
         host.address = nmap_host.address
-        host.tags = [tag, nmap_host.status]
+        host.status = nmap_host.status
+        host.add_tag(tag)
         if nmap_host.os_fingerprinted:
             host.os = nmap_host.os_fingerprint
         host.hostname = nmap_host.hostnames

@@ -112,15 +112,13 @@ class CoreSearch(object):
             old = elastic_object.to_dict()
             new = new.to_dict()
             for key in new:
-                if not key == id_value:
+                if object_type._doc_type.mapping[key]._multi:
                     value = old.get(key, [])
-                    try:
-                        value.extend(new[key])
-                        update[key] = list(set(value))
-                    except TypeError:
-                        update[key] = value
-                    except AttributeError:
-                        update[key] = value
+                    value.extend(new[key])
+                    update[key] = list(set(value))
+                else:
+                    value = new[key]
+                    update[key] = value
             elastic_object.update(**update)
         else:
             new.save()
@@ -204,7 +202,7 @@ class HostSearch(CoreSearch):
                 else:
                     s = s.filter("term", tags=tag)
         if up:
-            s = s.filter("term", tags='up')
+            s = s.filter("term", status='up')
         if ports:
             for port in ports.split(','):
                 s = s.filter("match", open_ports=port)
