@@ -31,8 +31,8 @@ class CoreSearch(object):
         else:
             response = search.scan()
 
-        for hit in response:
-            yield hit
+        return [hit for hit in response]
+
 
     def argument_search(self):
         """
