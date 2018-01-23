@@ -22,6 +22,7 @@ class CoreSearch(object):
     def __init__(self, use_pipe=True, *args, **kwargs):
         self.is_pipe = not isatty(sys.stdin.fileno())
         self.use_pipe = use_pipe
+        self.object_type = None
 
 
     def search(self, number=None, *args, **kwargs):
@@ -65,21 +66,16 @@ class CoreSearch(object):
         raise NotImplementedError('')
 
 
-    def merge(self, obj):
+    def id_to_object(self, line):
         """
-            Function to merge the object with the object in the elasticsearch database.
+            From an id return a valid object.
         """
         raise NotImplementedError('')
 
-    # def get(self, arguments=True, *args, **kwargs):
-    #     """
-    #         Retrieves the objects from either the pipe or from elasticsearch.
-    #         If no pipe is available this function will call search or argument search depending on the arguments flag.
-    #     """
-    #     raise NotImplementedError('')
 
-    def id_to_object(self, line):
+    def object_to_id(self, obj):
         """
+            From the object, return the id.
         """
         raise NotImplementedError('')
 
@@ -98,28 +94,31 @@ class CoreSearch(object):
                 yield self.id_to_object(line.strip())
 
 
-    @staticmethod
-    def _merge(new, object_type, id_value):
+    def merge(self, new):
         """
             Merge
             new: object to be merged.
             object_type: type of the to be merged object
             id_value: name of the value in new that is the id of the object.
         """
-        elastic_object = object_type.get(getattr(new, id_value), ignore=404)
-        if elastic_object:
-            update = {}
-            old = elastic_object.to_dict()
-            new = new.to_dict()
-            for key in new:
-                if object_type._doc_type.mapping[key]._multi:
-                    value = old.get(key, [])
-                    value.extend(new[key])
-                    update[key] = list(set(value))
-                else:
-                    value = new[key]
-                    update[key] = value
-            elastic_object.update(**update)
+        object_id = self.object_to_id(new)
+        if object_id:
+            elastic_object = self.object_type.get(object_id, ignore=404)
+            if elastic_object:
+                update = {}
+                old = elastic_object.to_dict()
+                new = new.to_dict()
+                for key in new:
+                    if self.object_type._doc_type.mapping[key]._multi:
+                        value = old.get(key, [])
+                        value.extend(new[key])
+                        update[key] = list(set(value))
+                    else:
+                        value = new[key]
+                        update[key] = value
+                elastic_object.update(**update)
+            else:
+                new.save()
         else:
             new.save()
 
@@ -140,10 +139,7 @@ class RangeSearch(CoreSearch):
 
     def __init__(self, *args, **kwargs):
         super(RangeSearch, self).__init__(*args, **kwargs)
-
-
-    def merge(self, r):
-        super(RangeSearch, self)._merge(r, RangeDoc, 'range')
+        self.object_type = RangeDoc
 
 
     def create_search(self, tags='', *args, **kwargs):
@@ -175,6 +171,15 @@ class RangeSearch(CoreSearch):
             result.save()
         return result
 
+    def object_to_id(self, obj):
+        """
+            Returns the 'range' value of the given object if it exists, else returns None
+        """
+        try:
+            return obj.range
+        except AttributeError:
+            return None
+
     @property
     def argparser(self):
         """
@@ -187,10 +192,7 @@ class HostSearch(CoreSearch):
 
     def __init__(self, *args, **kwargs):
         super(HostSearch, self).__init__(*args, **kwargs)
-
-
-    def merge(self, obj):
-        super(HostSearch, self)._merge(obj, HostDoc, 'address')
+        self.object_type = HostDoc
 
 
     def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
@@ -220,6 +222,15 @@ class HostSearch(CoreSearch):
             host.save()
         return host
 
+    def object_to_id(self, obj):
+        """
+            Returns the 'Address' value of the given object if it exists, else returns None
+        """
+        try:
+            return obj.address
+        except AttributeError:
+            return None
+
     def get_hosts(self, *args, **kwargs):
         arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe and self.use_pipe:
@@ -245,12 +256,7 @@ class ServiceSearch(CoreSearch):
 
     def __init__(self, *args, **kwargs):
         super(ServiceSearch, self).__init__(*args, **kwargs)
-
-
-    def merge(self, obj):
-        # TODO fixme
-        raise NotImplementedError('You should not try to merge services I guess')
-        # super(ServiceCore, self)._merge(obj, Service, '')
+        self.object_type = ServiceDoc
 
 
     def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
@@ -285,6 +291,21 @@ class ServiceSearch(CoreSearch):
     def id_to_object(self, line):
         # Dont know how to solve this yet.
         return None
+
+    def object_to_id(self, obj):
+        """
+            Searches elasticsearch for objects with the same address, protocol, port and state.
+        """
+        search = ServiceDoc.search()
+        search = search.filter("term", address=obj.address)
+        search = search.filter("term", protocol=obj.protocol)
+        search = search.filter("term", port=obj.port)
+        search = search.filter("term", state=obj.state)
+        if search.count():
+            result = search[0].execute()[0]
+            return result.meta.id
+        else:
+            return None
 
     @property
     def argparser(self):

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from elasticsearch_dsl import (Date, DocType, Integer, Ip,
-                               Keyword, Object, Text)
+                               Keyword, Object, Text, Boolean)
 from jackal.config import Config
 
 config = Config()
@@ -64,6 +64,8 @@ class ServiceDoc(DocType):
     service_id = Keyword()
     created_at = Date()
     updated_at = Date()
+    id = Keyword()
+    service = Keyword()
     tags = Keyword(multi=True)
 
     class Meta:
@@ -113,6 +115,8 @@ class HostDoc(DocType):
     closed_ports = Integer(multi=True)
     filtered_ports = Integer(multi=True)
     status = Keyword()
+    description = Keyword(multi=True)
+    domain_controller = Boolean()
 
     class Meta:
         index = "{}-hosts".format(config.get('jackal', 'index'))

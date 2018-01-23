@@ -32,7 +32,8 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
     """
         Imports the given nmap result.
     """
-    hs = HostSearch(arguments=False)
+    host_search = HostSearch(arguments=False)
+    service_search = ServiceSearch()
     parser = NmapParser()
     report = parser.parse_fromstring(result)
     imports = 0
@@ -51,14 +52,14 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
                 for service in nmap_host.services:
                     serv = ServiceDoc(**service.get_dict())
                     serv.address = nmap_host.address
-                    serv.save()
+                    service_search.merge(serv)
                     if service.state == 'open':
                         host.open_ports.append(service.port)
                     if service.state == 'closed':
                         host.closed_ports.append(service.port)
                     if service.state == 'filtered':
                         host.filtered_ports.append(service.port)
-            hs.merge(host)
+            host_search.merge(host)
     if imports:
         print_success("Imported {} hosts, with tag {}".format(imports, tag))
     else:
