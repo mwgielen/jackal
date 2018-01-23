@@ -5,7 +5,7 @@ import sys
 from libnmap.parser import NmapParser, NmapParserException
 from libnmap.process import NmapProcess
 
-from jackal import HostDoc, HostSearch, RangeSearch, ServiceDoc
+from jackal import HostDoc, HostSearch, RangeSearch, ServiceDoc, ServiceSearch
 from jackal.utils import print_error, print_notification, print_success
 from jackal.config import Config
 
@@ -173,6 +173,38 @@ def nmap_scan():
     result = nmap(nmap_args, [h.address for h in hosts])
     # Import the nmap result
     import_nmap(result, "nmap_{}".format(arguments.type), check_function=all_hosts, import_services=True)
+
+
+def nmap_smb_vulnscan():
+    """
+        Scans available smb services in the database for smb signing and ms17-010.
+    """
+    service_search = ServiceSearch()
+    services = service_search.get_services(ports='445', tags='!smb_vulnscan', up=True)
+    service_dict = {}
+    for service in services:
+        service_dict[service.address] = service
+
+    nmap_args = "-Pn -n --disable_arp_ping --script smb-security-mode.nse,smb-vuln-ms17-010.nse -p 445"
+
+    if services:
+        result = nmap(nmap_args, [s.address for s in services])
+        parser = NmapParser()
+        report = parser.parse_fromstring(result)
+        for nmap_host in report.hosts:
+            for script_result in nmap_host.scripts_results:
+                script_result = script_result.get('elements', {})
+                service = service_dict[nmap_host.address]
+                service.add_tag('smb_vulnscan')
+                if script_result.get('message_signing', '') == 'disabled':
+                    print_success("({}) SMB Signing disabled".format(nmap_host.address))
+                    service.add_tag('smb_signing_disabled')
+                if script_result.get('CVE-2017-0143', {}).get('state', '') == 'VULNERABLE':
+                    print_success("({}) Vulnerable for MS17-010".format(nmap_host.address))
+                    service.add_tag('MS17-010')
+                service.update(tags=service.tags)
+    else:
+        print_notification("No services found to scan.")
 
 
 if __name__ == '__main__':
