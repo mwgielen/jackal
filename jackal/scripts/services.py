@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 
-from jackal import ServiceDoc, ServiceSearch
+from jackal import Service, ServiceSearch
 from jackal.utils import print_json, print_line
 
 
@@ -23,7 +23,7 @@ def overview():
         Function to create an overview of the services.
         Will print a list of ports found an the number of times the port was seen.
     """
-    search = ServiceDoc.search()
+    search = Service.search()
     search = search.filter("term", state='open')
     search.aggs.bucket('port_count', 'terms', field='port', order={'_count': 'desc'}, size=100) \
         .metric('unique_count', 'cardinality', field='address')

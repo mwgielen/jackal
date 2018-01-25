@@ -6,7 +6,7 @@ from os import isatty
 from elasticsearch_dsl.connections import connections
 
 from jackal.config import Config
-from jackal.documents import RangeDoc, HostDoc, ServiceDoc
+from jackal.documents import Range, Host, Service
 
 
 config = Config()
@@ -139,11 +139,11 @@ class RangeSearch(CoreSearch):
 
     def __init__(self, *args, **kwargs):
         super(RangeSearch, self).__init__(*args, **kwargs)
-        self.object_type = RangeDoc
+        self.object_type = Range
 
 
     def create_search(self, tags='', *args, **kwargs):
-        search = RangeDoc.search()
+        search = Range.search()
         if tags:
             for tag in tags.split(','):
                 if tag[0] == '!':
@@ -155,7 +155,7 @@ class RangeSearch(CoreSearch):
     def get_ranges(self, *args, **kwargs):
         arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe and self.use_pipe:
-            return self.get_pipe(RangeDoc)
+            return self.get_pipe(Range)
         elif arguments.range or arguments.tags:
             return self.argument_search()
         else:
@@ -165,9 +165,9 @@ class RangeSearch(CoreSearch):
         """
             Resolves an ip adres to a range object, creating it if it doesn't exists.
         """
-        result = RangeDoc.get(line, ignore=404)
+        result = Range.get(line, ignore=404)
         if not result:
-            result = RangeDoc(range=line)
+            result = Range(range=line)
             result.save()
         return result
 
@@ -192,11 +192,11 @@ class HostSearch(CoreSearch):
 
     def __init__(self, *args, **kwargs):
         super(HostSearch, self).__init__(*args, **kwargs)
-        self.object_type = HostDoc
+        self.object_type = Host
 
 
     def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
-        s = HostDoc.search()
+        s = Host.search()
         if tags:
             for tag in tags.split(','):
                 if tag[0] == '!':
@@ -216,9 +216,9 @@ class HostSearch(CoreSearch):
         return s
 
     def id_to_object(self, line):
-        host = HostDoc.get(line, ignore=404)
+        host = Host.get(line, ignore=404)
         if not host:
-            host = HostDoc(address=line)
+            host = Host(address=line)
             host.save()
         return host
 
@@ -234,7 +234,7 @@ class HostSearch(CoreSearch):
     def get_hosts(self, *args, **kwargs):
         arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe and self.use_pipe:
-            return self.get_pipe(HostDoc)
+            return self.get_pipe(Host)
         elif arguments.range or arguments.tags or arguments.search or arguments.ports or arguments.up:
             return self.argument_search()
         else:
@@ -256,11 +256,11 @@ class ServiceSearch(CoreSearch):
 
     def __init__(self, *args, **kwargs):
         super(ServiceSearch, self).__init__(*args, **kwargs)
-        self.object_type = ServiceDoc
+        self.object_type = Service
 
 
     def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
-        s = ServiceDoc.search()
+        s = Service.search()
         if tags:
             for tag in tags.split(','):
                 if tag[0] == '!':
@@ -282,7 +282,7 @@ class ServiceSearch(CoreSearch):
     def get_services(self, *args, **kwargs):
         arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe and self.use_pipe:
-            return self.get_pipe(ServiceDoc)
+            return self.get_pipe(Service)
         elif arguments.range or arguments.tags or arguments.search or arguments.ports or arguments.up:
             return self.argument_search()
         else:
@@ -296,7 +296,7 @@ class ServiceSearch(CoreSearch):
         """
             Searches elasticsearch for objects with the same address, protocol, port and state.
         """
-        search = ServiceDoc.search()
+        search = Service.search()
         search = search.filter("term", address=obj.address)
         search = search.filter("term", protocol=obj.protocol)
         search = search.filter("term", port=obj.port)
@@ -325,7 +325,7 @@ class DocMapper(object):
         Only works for json input type
     """
 
-    object_mapping = {'range_doc': RangeDoc, 'host_doc': HostDoc, 'service_doc': ServiceDoc}
+    object_mapping = {'range_doc': Range, 'host_doc': Host, 'service_doc': Service}
 
     def __init__(self):
         self.is_pipe = not isatty(sys.stdin.fileno())

@@ -7,7 +7,7 @@ from jackal.config import Config
 config = Config()
 
 
-class RangeDoc(DocType):
+class Range(DocType):
     """
         This class represents a range in elasticsearch.
         The range attribute will also be used as the id of a range.
@@ -24,15 +24,15 @@ class RangeDoc(DocType):
     def save(self, ** kwargs):
         self.created_at = datetime.now()
         self.meta.id = self.range
-        return super(RangeDoc, self).save(** kwargs)
+        return super(Range, self).save(** kwargs)
 
     def update(self, ** kwargs):
         self.updated_at = datetime.now()
-        return super(RangeDoc, self).update(** kwargs)
+        return super(Range, self).update(** kwargs)
 
     def __init__(self, **kwargs):
         args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
-        super(RangeDoc, self).__init__(** args)
+        super(Range, self).__init__(** args)
         self.meta.id = kwargs.get('range', '')
 
     def add_tag(self, tag):
@@ -42,7 +42,7 @@ class RangeDoc(DocType):
         self.tags = list(set(self.tags or []) - set([tag]))
 
     def to_dict(self, include_meta=False):
-        result = super(RangeDoc, self).to_dict(include_meta=include_meta)
+        result = super(Range, self).to_dict(include_meta=include_meta)
         if include_meta:
             source = result.pop('_source')
             return {**result, **source}
@@ -50,7 +50,7 @@ class RangeDoc(DocType):
             return result
 
 
-class ServiceDoc(DocType):
+class Service(DocType):
     """
         This class represents a service object in elasticsearch.
     """
@@ -73,11 +73,11 @@ class ServiceDoc(DocType):
 
     def save(self, ** kwargs):
         self.created_at = datetime.now()
-        return super(ServiceDoc, self).save(** kwargs)
+        return super(Service, self).save(** kwargs)
 
     def update(self, ** kwargs):
         self.updated_at = datetime.now()
-        return super(ServiceDoc, self).update(** kwargs)
+        return super(Service, self).update(** kwargs)
 
     def add_tag(self, tag):
         self.tags = list(set(self.tags or []) | set([tag]))
@@ -86,7 +86,7 @@ class ServiceDoc(DocType):
         self.tags = list(set(self.tags or []) - set([tag]))
 
     def to_dict(self, include_meta=False):
-        result = super(ServiceDoc, self).to_dict(include_meta=include_meta)
+        result = super(Service, self).to_dict(include_meta=include_meta)
         if include_meta:
             source = result.pop('_source')
             return {**result, **source}
@@ -95,12 +95,12 @@ class ServiceDoc(DocType):
 
     def __init__(self, ** kwargs):
         args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
-        super(ServiceDoc, self).__init__(** args)
+        super(Service, self).__init__(** args)
         if '_id' in kwargs:
             self.meta.id = kwargs['_id']
 
 
-class HostDoc(DocType):
+class Host(DocType):
     """
         This class represents a host object in elasticsearch.
         The address attribute will be used to set the id of a host.
@@ -124,15 +124,15 @@ class HostDoc(DocType):
     def save(self, ** kwargs):
         self.meta.id = self.address
         self.created_at = datetime.now()
-        return super(HostDoc, self).save(** kwargs)
+        return super(Host, self).save(** kwargs)
 
     def update(self, ** kwargs):
         self.updated_at = datetime.now()
-        return super(HostDoc, self).update(** kwargs)
+        return super(Host, self).update(** kwargs)
 
     def __init__(self, ** kwargs):
         args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
-        super(HostDoc, self).__init__(** args)
+        super(Host, self).__init__(** args)
         self.meta.id = self.address
 
     def add_tag(self, tag):
@@ -142,9 +142,10 @@ class HostDoc(DocType):
         self.tags = list(set(self.tags or []) - set([tag]))
 
     def to_dict(self, include_meta=False):
-        result = super(HostDoc, self).to_dict(include_meta=include_meta)
+        result = super(Host, self).to_dict(include_meta=include_meta)
         if include_meta:
             source = result.pop('_source')
             return {**result, **source}
         else:
             return result
+

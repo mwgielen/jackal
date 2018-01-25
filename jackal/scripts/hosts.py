@@ -4,7 +4,7 @@ Script to list all of the ranges
 """
 import argparse
 
-from jackal import HostSearch, HostDoc
+from jackal import HostSearch, Host
 from jackal.utils import print_json, print_line
 
 
@@ -26,7 +26,7 @@ def overview():
     """
         Prints an overview of the tags of the hosts.
     """
-    doc = HostDoc()
+    doc = Host()
     search = doc.search()
     search.aggs.bucket('tag_count', 'terms', field='tags', order={'_count': 'desc'}, size=100)
     response = search.execute()

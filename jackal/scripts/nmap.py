@@ -5,7 +5,7 @@ import sys
 from libnmap.parser import NmapParser, NmapParserException
 from libnmap.process import NmapProcess
 
-from jackal import HostDoc, HostSearch, RangeSearch, ServiceDoc, ServiceSearch
+from jackal import Host, HostSearch, RangeSearch, Service, ServiceSearch
 from jackal.utils import print_error, print_notification, print_success
 from jackal.config import Config
 
@@ -40,7 +40,7 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
     for nmap_host in report.hosts:
         if check_function(nmap_host):
             imports += 1
-            host = HostDoc()
+            host = Host()
             host.address = nmap_host.address
             host.add_tag(tag)
             host.status = nmap_host.status
@@ -50,7 +50,7 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
                 host.hostname = nmap_host.hostnames
             if import_services:
                 for service in nmap_host.services:
-                    serv = ServiceDoc(**service.get_dict())
+                    serv = Service(**service.get_dict())
                     serv.address = nmap_host.address
                     service_search.merge(serv)
                     if service.state == 'open':

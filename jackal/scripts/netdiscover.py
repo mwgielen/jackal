@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
-from jackal import HostDoc, RangeSearch
+from jackal import Host, RangeSearch
 from jackal.utils import print_line
 
 
@@ -28,12 +28,12 @@ class NetDiscover(object):
         self.ip_range.update(tags=self.ip_range.tags)
 
         for ip in self.ips:
-            host = HostDoc.get(ip, ignore=404)
+            host = Host.get(ip, ignore=404)
             if host:
                 host.add_tag('netdiscover')
                 host.update(tags=host.tags)
             else:
-                host = HostDoc(address=ip, tags=['netdiscover'])
+                host = Host(address=ip, tags=['netdiscover'])
                 host.save()
 
 def main():

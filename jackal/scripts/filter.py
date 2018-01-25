@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from jackal.utils import print_line, print_error, PartialFormatter
-from jackal.core import DocMapper, RangeDoc, HostDoc, ServiceDoc
+from jackal.core import DocMapper, Range, Host, Service
 
 
 fmt = PartialFormatter(missing='')
@@ -38,11 +38,11 @@ def format():
         if doc_mapper.is_pipe:
             for obj in doc_mapper.get_pipe():
                 style = ''
-                if isinstance(obj, RangeDoc):
+                if isinstance(obj, Range):
                     style = ranges_style
-                elif isinstance(obj, HostDoc):
+                elif isinstance(obj, Host):
                     style = host_style
-                elif isinstance(obj, ServiceDoc):
+                elif isinstance(obj, Service):
                     style = service_style
                 print_line(fmt.format(style, **obj.to_dict(include_meta=True)))
         else:

@@ -7,7 +7,7 @@ import sys
 import string
 from libnmap.parser import NmapParser
 from jackal import HostSearch, ServiceSearch
-from jackal import HostDoc, ServiceDoc
+from jackal import Host, Service
 
 def datetime_handler(x):
     if isinstance(x, datetime.datetime):
@@ -68,7 +68,7 @@ def import_nmap(input_file, tag):
     imported_hosts = 0
     for nmap_host in report.hosts:
         imported_hosts += 1
-        host = HostDoc()
+        host = Host()
         host.address = nmap_host.address
         host.status = nmap_host.status
         host.add_tag(tag)
@@ -77,7 +77,7 @@ def import_nmap(input_file, tag):
         host.hostname = nmap_host.hostnames
 
         for service in nmap_host.services:
-            serv = ServiceDoc(** service.get_dict())
+            serv = Service(** service.get_dict())
             serv.address = nmap_host.address
             serv.save()
             if service.state == 'open':

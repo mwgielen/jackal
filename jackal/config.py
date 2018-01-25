@@ -196,7 +196,7 @@ class Config(object):
 
         if initialize_indices:
             index = self.get('jackal', 'index')
-            from jackal import HostDoc, RangeDoc, ServiceDoc
-            HostDoc.init(index="{}-hosts".format(index))
-            RangeDoc.init(index="{}-ranges".format(index))
-            ServiceDoc.init(index="{}-services".format(index))
+            from jackal import Host, Range, Service
+            Host.init(index="{}-hosts".format(index))
+            Range.init(index="{}-ranges".format(index))
+            Service.init(index="{}-services".format(index))
