@@ -29,9 +29,31 @@ def manual_configure():
         Function to manually configure jackal.
     """
     print("Manual configuring jackal")
+    mapping = { '1': 'y', '0': 'n'}
     config = Config()
     host = input_with_default("What is the Elasticsearch host?", config.get('jackal', 'host'))
     config.set('jackal', 'host', host)
+
+    if input_with_default("Use SSL?", mapping[config.get('jackal', 'use_ssl')]) == 'y':
+        config.set('jackal', 'use_ssl', '1')
+        if input_with_default("Setup custom server cert?", 'y') == 'y':
+            ca_certs = input_with_default("Server certificate location?", config.get('jackal', 'ca_certs'))
+            config.set('jackal', 'ca_certs', ca_certs)
+        else:
+            config.set('jackal', 'ca_certs', '')
+    else:
+        config.set('jackal', 'use_ssl', '0')
+
+    if input_with_default("Setup client certificates?", mapping[config.get('jackal', 'client_certs')]) == 'y':
+        config.set('jackal', 'client_certs', '1')
+        client_cert = input_with_default("Client cert location?", config.get('jackal', 'client_cert'))
+        config.set('jackal', 'client_cert', client_cert)
+        client_key = input_with_default("Client key location?", config.get('jackal', 'client_key'))
+        config.set('jackal', 'client_key', client_key)
+    else:
+        config.set('jackal', 'client_certs', '0')
+
+
     index = input_with_default("What index prefix should jackal use?", config.get('jackal', 'index'))
     config.set('jackal', 'index', index)
     initialize_indices = (input_with_default("Do you want to initialize the indices?", 'n').lower() == 'y')
@@ -117,7 +139,12 @@ class Config(object):
         'jackal':
             {
                 'host': 'localhost',
-                'index': 'jackal'
+                'index': 'jackal',
+                'use_ssl': '0',
+                'client_certs': '0',
+                'ca_certs': '',
+                'client_cert': '',
+                'client_key': '',
             },
         'nessus':
             {
@@ -197,6 +224,8 @@ class Config(object):
         if initialize_indices:
             index = self.get('jackal', 'index')
             from jackal import Host, Range, Service
+            from jackal.core import create_connection
+            create_connection(self)
             Host.init(index="{}-hosts".format(index))
             Range.init(index="{}-ranges".format(index))
             Service.init(index="{}-services".format(index))

@@ -1,18 +1,42 @@
 import argparse
 import json
+import logging
 import sys
 from os import isatty
 
+import urllib3
+from elasticsearch import NotFoundError, ConnectionError
 from elasticsearch_dsl.connections import connections
-
 from jackal.config import Config
-from jackal.documents import Range, Host, Service
+from jackal.documents import Host, Range, Service
+from jackal.utils import print_error
 
+# Disable warnings for now.
+urllib3.disable_warnings()
+
+# Disable logging
+logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+logging.getLogger("elasticsearch").setLevel(logging.CRITICAL)
+
+def create_connection(conf):
+    """
+        Creates a connection based upon the given configuration object.
+    """
+    host_config = {}
+    host_config['hosts'] = [conf.get('jackal', 'host')]
+    if int(conf.get('jackal', 'use_ssl')):
+        host_config['use_ssl'] = True
+    if conf.get('jackal', 'ca_certs'):
+        host_config['ca_certs'] = conf.get('jackal', 'ca_certs')
+    if int(conf.get('jackal', 'client_certs')):
+        host_config['client_cert'] = conf.get('jackal', 'client_cert')
+        host_config['client_key'] = conf.get('jackal', 'client_key')
+
+    connections.create_connection(**host_config)
 
 config = Config()
 
-connections.create_connection(hosts=[config.get('jackal', 'host')], timeout=20)
-
+create_connection(config)
 
 class CoreSearch(object):
     """
@@ -26,13 +50,23 @@ class CoreSearch(object):
 
 
     def search(self, number=None, *args, **kwargs):
+        """
+            Searches the elasticsearch instance to retrieve the requested documents.
+        """
         search = self.create_search(*args, **kwargs)
-        if number:
-            response = search[0:number]
-        else:
-            response = search.scan()
+        try:
+            if number:
+                response = search[0:number]
+            else:
+                response = search.scan()
 
-        return [hit for hit in response]
+            return [hit for hit in response]
+        except ConnectionError:
+            print_error("Cannot connect to elasticsearch")
+            return []
+        except NotFoundError:
+            print_error("The index was not found, have you initialized the index?")
+            return []
 
 
     def argument_search(self):
@@ -48,7 +82,12 @@ class CoreSearch(object):
             Returns the number of results after filtering with the given arguments.
         """
         search = self.create_search(*args, **kwargs)
-        return search.count()
+        try:
+            return search.count()
+        except ConnectionError:
+            print_error("Cannot connect to elasticsearch")
+        except NotFoundError:
+            print_error("The index was not found, have you initialized the index?")
 
 
     def argument_count(self):
