@@ -364,7 +364,7 @@ class DocMapper(object):
         Only works for json input type
     """
 
-    object_mapping = {'range_doc': Range, 'host_doc': Host, 'service_doc': Service}
+    object_mapping = {'range': Range, 'host': Host, 'service': Service}
 
     def __init__(self):
         self.is_pipe = not isatty(sys.stdin.fileno())
