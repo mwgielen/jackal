@@ -5,7 +5,7 @@ import sys
 from os import isatty
 
 import urllib3
-from elasticsearch import NotFoundError, ConnectionError
+from elasticsearch import NotFoundError, ConnectionError, TransportError
 from elasticsearch_dsl.connections import connections
 from jackal.config import Config
 from jackal.documents import Host, Range, Service
@@ -61,11 +61,11 @@ class CoreSearch(object):
                 response = search.scan()
 
             return [hit for hit in response]
-        except ConnectionError:
-            print_error("Cannot connect to elasticsearch")
-            return []
         except NotFoundError:
             print_error("The index was not found, have you initialized the index?")
+            return []
+        except (ConnectionError, TransportError):
+            print_error("Cannot connect to elasticsearch")
             return []
 
 
@@ -84,11 +84,10 @@ class CoreSearch(object):
         search = self.create_search(*args, **kwargs)
         try:
             return search.count()
-        except ConnectionError:
-            print_error("Cannot connect to elasticsearch")
         except NotFoundError:
             print_error("The index was not found, have you initialized the index?")
-
+        except (ConnectionError, TransportError):
+            print_error("Cannot connect to elasticsearch")
 
     def argument_count(self):
         """
