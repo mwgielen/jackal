@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from jackal.utils import print_line, print_error, PartialFormatter
-from jackal.core import DocMapper, Range, Host, Service
+from jackal.core import DocMapper, Range, Host, Service, User
 
 
 fmt = PartialFormatter(missing='')
@@ -31,6 +31,7 @@ def format():
     service_style = "{address:15} {port:7} {protocol:5} {service:15} {state:10} {banner} {tags}"
     host_style = "{address:15} {tags}"
     ranges_style = "{range:18} {tags}"
+    users_style = "{username}"
     if len(sys.argv) > 1:
         format_input(sys.argv[1])
     else:
@@ -44,6 +45,8 @@ def format():
                     style = host_style
                 elif isinstance(obj, Service):
                     style = service_style
+                elif isinstance(obj, User):
+                    style = users_style
                 print_line(fmt.format(style, **obj.to_dict(include_meta=True)))
         else:
             print_error("Please use this script with pipes")
