@@ -6,32 +6,42 @@ Jackal provides a way to store results from hacking tools in a single place.
 During a network penetration test, there is a lot of information that hackers have to their disposal:
 - Ranges that are in use
 - Hosts that are up.
-- Port states on different hosts.
+- Open ports on different hosts.
 - Which hosts are investigated already
+- Output from different tools
 
-To sort through this data hackers may use things like cut, sort grep etc to go through this data. However this could lead to a lot of files on disk provided by different tools.
-Jackal tries to simplify this process by storing everything on a central place by merging the data gathered by the hacker and making it easily searchable.
+To sort through this data hackers may use things like cut, sort grep etc. to go through this data. However this could lead to a lot of files on disk provided by different tools and can be a hassle to exchange (securely) between teammembers.
+Jackal tries to simplify this process by storing everything on a central place by merging the data gathered by the hackers and making it easily searchable.
 
 
 ## Dependencies and installation
 Jackal only works on Python 3.
-Jackal requires [python-libnmap](https://github.com/savon-noir/python-libnmap) and [elasticsearch_dsl](https://github.com/elastic/elasticsearch-dsl-py) to function. Some of the included tools require some other install tools on your system, for example jk-netdiscover requires netdiscover.
+Jackal requires [python-libnmap](https://github.com/savon-noir/python-libnmap) and [elasticsearch_dsl](https://github.com/elastic/elasticsearch-dsl-py) to function. Also an [elasticsearch](https://www.elastic.co/) instance is required. Some of the included tools require some other install tools on your system, for example jk-netdiscover requires netdiscover.
 
-This package can be installed with `pip install jackal` or the latest version can be installed with `python setup.py install`.
+
+This package can be installed with `pip3 install jackal` or the latest version can be installed with `python3 setup.py install`.
 
 ## Usage
 
 Jackal provides tools to interact with the database. The stand alone tools that can be used are:
 - jk-hosts, this provides a way to retrieve and search through the hosts data. See the command line arguments below.
 - jk-ranges, this tool can be used to retrieve ranges that are saved from elasticsearch.
-- jk-status, this tool will show some information about the data in the elasticsearch instance and print them to screen.
+- jk-services, retrieves services.
+- jk-users, retrieves users.
+- jk-status, this tool will show some information about the data in the elasticsearch instance.
 - jk-filter, to filter an json object to a single value. This provides the ability to use the output of jackal in other tools.
 - jk-format, to format the output of the ranges, hosts and services tools to improve reading.
 - jk-configure, to configure jackal.
+- jk-initialize, to initialize the indices in elasticsearch.
+- jk-add-named-pipe, tool to update the named pipe configuration.
+
+Jackal also provides ways to import output from other tools:
+- jk-import-nmap, to import a finished [nmap](https://nmap.org/) scan into jackal
+- jk-import-domaindump, to import the output of [ldapdomaindump](https://github.com/dirkjanm/ldapdomaindump).
 
 Futhermore there are tools to interact with some commonly used tools to map the network:
-- jk-import-nmap, to import a finished nmap scan into jackal
-- jk-nmap, to perform a ping or reverse lookup scan on the ranges in elasticsearch.
+- jk-nmap-discover, to perform a ping or reverse lookup scan on the ranges in elasticsearch.
+- jk-nmap, to perform nmap scans on hosts in elasticsearch.
 - jk-netdiscover, this will retrieve and scan ranges from elastic. Any discovered hosts are stored in elastic.
 
 ### Examples
@@ -40,21 +50,23 @@ A simple way to update the ranges in the elasticsearch instance is by piping you
 ```
 cat ranges.txt | jk-ranges
 ```
-As long as the save is not disabled jackal will parse the input and store it in elasticsearch.
-After doing this the ranges are shown on screen and later can be retrieved by using jk-ranges again.
+Jackal will parse the input and store it in elasticsearch.
+After doing this the ranges are shown on screen and later can be retrieved by using jk-ranges.
 
-The same can be done by piping a file of ip addresses to jk-hosts:
+The same can be done by piping a file of ip addresses to jk-hosts and usernames to jk-users:
 ```
 cat hosts.txt | jk-hosts
+echo "admin"  | jk-users
 ```
 
-The hosts can be retrieved by using jk-hosts again.
+If you know a specific user, host or range is in the database you can also retrieve the information this way.
 
-To import a nmap scan into jackal use jk-import-nmap with the file flag:
+
+To import a nmap scan into jackal use jk-import-nmap:
 ```
-jk-import-nmap /your/nmap/scan.xml
+jk-import-nmap /your/nmap/scan.xml other/scan.xml
 ```
-After the import is done the results can be shown by running the jk-hosts.
+After the import is done the results can be shown by running the jk-hosts and jk-services tools.
 
 To filter the output of jk-hosts pipe the output to jk-filter and give a single argument to filter, for example:
 ```
@@ -62,14 +74,18 @@ jk-hosts -p 80 -u | jk-filter address
 ```
 Will print the ip addresses of the hosts that have port 80 open and are up.
 
-You can also generate urls of hosts by using the jk-format tool:
+The jk-format tool can be used to create more human readable output, some default values are provided. Othwise the second argument will be interpreted as a [python format string](https://docs.python.org/3.3/library/string.html#format-specification-mini-language).
+
 ```
+jk-ranges | jk-format
+jk-hosts | jk-format {address} # Is the same as jk-filter address
 jk-services -S http | jk-format '{service}://{address}:{port}'
 ```
 
-Jackal has some wrappers around commonly used tools to find hosts on the network these include:
+Jackal has some wrappers around commonly used tools to find hosts and services on the network these include:
 ```
 jk-netdiscover
+jk-nmap-discover
 jk-nmap
 jk-sniffer
 ```
