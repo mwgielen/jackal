@@ -7,50 +7,82 @@ from jackal.config import Config
 config = Config()
 
 
-class Range(DocType):
+class JackalDoc(DocType):
     """
-        This class represents a range in elasticsearch.
-        The range attribute will also be used as the id of a range.
+        Document type to provide some default behaviour for jackal.
     """
-    name = Text()
-    range = Text(required=True)
     tags = Keyword(multi=True)
     created_at = Date()
     updated_at = Date()
 
-    class Meta:
-        index = "{}-ranges".format(config.get('jackal', 'index'))
 
-    def save(self, ** kwargs):
+    def save(self, **kwargs):
         self.created_at = datetime.now()
-        self.meta.id = self.range
-        return super(Range, self).save(** kwargs)
+        return super(JackalDoc, self).save(** kwargs)
 
-    def update(self, ** kwargs):
-        self.updated_at = datetime.now()
-        return super(Range, self).update(** kwargs)
-
-    def __init__(self, **kwargs):
-        args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
-        super(Range, self).__init__(** args)
-        self.meta.id = kwargs.get('range', '')
 
     def add_tag(self, tag):
+        """
+            Adds a tag to the list of tags and makes sure the result list contains only unique results.
+        """
         self.tags = list(set(self.tags or []) | set([tag]))
 
+
     def remove_tag(self, tag):
+        """
+            Removes a tag from this object
+        """
         self.tags = list(set(self.tags or []) - set([tag]))
 
+
+    def update(self, **kwargs):
+        """
+            Sets the updated_at and updates the object.
+        """
+        self.updated_at = datetime.now()
+        return super(JackalDoc, self).update(** kwargs)
+
+
     def to_dict(self, include_meta=False):
-        result = super(Range, self).to_dict(include_meta=include_meta)
+        """
+            Returns the result as a dictionary, provide the include_meta flag to als show information like index and doctype.
+        """
+        result = super(JackalDoc, self).to_dict(include_meta=include_meta)
         if include_meta:
             source = result.pop('_source')
             return {**result, **source}
         else:
             return result
 
+    def __init__(self, ** kwargs):
+        args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
+        super(JackalDoc, self).__init__(** args)
+        if '_id' in kwargs:
+            self.meta.id = kwargs['_id']
 
-class Service(DocType):
+
+class Range(JackalDoc):
+    """
+        This class represents a range in elasticsearch.
+        The range attribute will also be used as the id of a range.
+    """
+    name = Text()
+    range = Text(required=True)
+
+
+    class Meta:
+        index = "{}-ranges".format(config.get('jackal', 'index'))
+
+    def save(self, **kwargs):
+        self.meta.id = self.range
+        return super(Range, self).save(** kwargs)
+
+    def __init__(self, **kwargs):
+        super(Range, self).__init__(**kwargs)
+        self.meta.id = self.range
+
+
+class Service(JackalDoc):
     """
         This class represents a service object in elasticsearch.
     """
@@ -62,55 +94,21 @@ class Service(DocType):
     protocol = Keyword()
     reason = Keyword()
     service_id = Keyword()
-    created_at = Date()
-    updated_at = Date()
     id = Keyword()
     service = Keyword()
-    tags = Keyword(multi=True)
 
     class Meta:
         index = "{}-services".format(config.get('jackal', 'index'))
 
-    def save(self, ** kwargs):
-        self.created_at = datetime.now()
-        return super(Service, self).save(** kwargs)
 
-    def update(self, ** kwargs):
-        self.updated_at = datetime.now()
-        return super(Service, self).update(** kwargs)
-
-    def add_tag(self, tag):
-        self.tags = list(set(self.tags or []) | set([tag]))
-
-    def remove_tag(self, tag):
-        self.tags = list(set(self.tags or []) - set([tag]))
-
-    def to_dict(self, include_meta=False):
-        result = super(Service, self).to_dict(include_meta=include_meta)
-        if include_meta:
-            source = result.pop('_source')
-            return {**result, **source}
-        else:
-            return result
-
-    def __init__(self, ** kwargs):
-        args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
-        super(Service, self).__init__(** args)
-        if '_id' in kwargs:
-            self.meta.id = kwargs['_id']
-
-
-class Host(DocType):
+class Host(JackalDoc):
     """
         This class represents a host object in elasticsearch.
         The address attribute will be used to set the id of a host.
     """
     address = Ip(required=True)
-    tags = Keyword(multi=True)
     os = Keyword()
     hostname = Keyword(multi=True)
-    created_at = Date()
-    updated_at = Date()
     open_ports = Integer(multi=True)
     closed_ports = Integer(multi=True)
     filtered_ports = Integer(multi=True)
@@ -121,36 +119,18 @@ class Host(DocType):
     class Meta:
         index = "{}-hosts".format(config.get('jackal', 'index'))
 
-    def save(self, ** kwargs):
+    def save(self, **kwargs):
         self.meta.id = self.address
-        self.created_at = datetime.now()
         return super(Host, self).save(** kwargs)
 
-    def update(self, ** kwargs):
-        self.updated_at = datetime.now()
-        return super(Host, self).update(** kwargs)
-
     def __init__(self, ** kwargs):
-        args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
-        super(Host, self).__init__(** args)
+        super(Host, self).__init__(**kwargs)
         self.meta.id = self.address
 
-    def add_tag(self, tag):
-        self.tags = list(set(self.tags or []) | set([tag]))
 
-    def remove_tag(self, tag):
-        self.tags = list(set(self.tags or []) - set([tag]))
-
-    def to_dict(self, include_meta=False):
-        result = super(Host, self).to_dict(include_meta=include_meta)
-        if include_meta:
-            source = result.pop('_source')
-            return {**result, **source}
-        else:
-            return result
-
-class User(DocType):
+class User(JackalDoc):
     """
+        User document, username will be used as id.
     """
     username = Keyword(required=True)
     tags = Keyword(multi=True)
@@ -160,36 +140,15 @@ class User(DocType):
     flags = Keyword(multi=True)
     sid = Keyword()
     groups = Keyword(multi=True)
-    created_at = Date()
-    updated_at = Date()
 
     class Meta:
         index = "{}-users".format(config.get('jackal', 'index'))
 
-    def save(self, ** kwargs):
+    def save(self, **kwargs):
         self.meta.id = self.username
-        self.created_at = datetime.now()
-        return super(User, self).save(** kwargs)
+        return super(User, self).save(**kwargs)
 
-    def update(self, ** kwargs):
-        self.updated_at = datetime.now()
-        return super(User, self).update(** kwargs)
 
-    def __init__(self, ** kwargs):
-        args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
-        super(User, self).__init__(** args)
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
         self.meta.id = self.username
-
-    def add_tag(self, tag):
-        self.tags = list(set(self.tags or []) | set([tag]))
-
-    def remove_tag(self, tag):
-        self.tags = list(set(self.tags or []) - set([tag]))
-
-    def to_dict(self, include_meta=False):
-        result = super(User, self).to_dict(include_meta=include_meta)
-        if include_meta:
-            source = result.pop('_source')
-            return {**result, **source}
-        else:
-            return result
