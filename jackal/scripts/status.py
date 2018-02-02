@@ -28,6 +28,15 @@ def main():
         print_notification("Number of users defined: {}".format(users.count()))
 
 
+def initialize_indices():
+    """
+        Initializes the indices
+    """
+    Host.init()
+    Range.init()
+    Service.init()
+    User.init()
+
 
 if __name__ == '__main__':
     main()
