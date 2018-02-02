@@ -58,7 +58,11 @@ class CoreSearch(object):
             if number:
                 response = search[0:number]
             else:
-                response = search.scan()
+                args, _ = self.core_parser.parse_known_args()
+                if args.number:
+                    response = search[0:args.number]
+                else:
+                    response = search.scan()
 
             return [hit for hit in response]
         except NotFoundError:
@@ -73,7 +77,7 @@ class CoreSearch(object):
         """
             Uses the command line arguments to fill the search function and call it.
         """
-        arguments, unknown = self.argparser.parse_known_args()
+        arguments, _ = self.argparser.parse_known_args()
         return self.search(**vars(arguments))
 
 
@@ -93,7 +97,7 @@ class CoreSearch(object):
         """
             Uses the command line arguments to fill the count function and call it.
         """
-        arguments, unknown = self.argparser.parse_known_args()
+        arguments, _ = self.argparser.parse_known_args()
         return self.count(**vars(arguments))
 
 
@@ -167,7 +171,8 @@ class CoreSearch(object):
     @property
     def core_parser(self):
         core_parser = argparse.ArgumentParser(add_help=True)
-        core_parser.add_argument('-t', '--tag', type=str, help="Tag(s) to search for, use (!) for not search, comma (,) to seperate tags", dest='tags')
+        core_parser.add_argument('-t', '--tag', type=str, help="Tag(s) to search for, use (!) for not search", dest='tags', nargs='+', default=[])
+        core_parser.add_argument('-n', '--number', type=int, help="Limit the results to this number", default=None)
         return core_parser
 
     @property
@@ -183,14 +188,13 @@ class RangeSearch(CoreSearch):
         self.object_type = Range
 
 
-    def create_search(self, tags='', *args, **kwargs):
+    def create_search(self, tags=[], *args, **kwargs):
         search = Range.search()
-        if tags:
-            for tag in tags.split(','):
-                if tag[0] == '!':
-                    search = search.exclude("term", tags=tag[1:])
-                else:
-                    search = search.filter("term", tags=tag)
+        for tag in tags:
+            if tag[0] == '!':
+                search = search.exclude("term", tags=tag[1:])
+            else:
+                search = search.filter("term", tags=tag)
         return search
 
     def get_ranges(self, *args, **kwargs):
@@ -227,7 +231,7 @@ class RangeSearch(CoreSearch):
             Argparser option with search functionality specific for ranges.
         """
         core_parser = self.core_parser
-        core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
+        core_parser.add_argument('-r', '--range', type=str, help="The range to search for use")
         return core_parser
 
 
@@ -238,22 +242,19 @@ class HostSearch(CoreSearch):
         self.object_type = Host
 
 
-    def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
+    def create_search(self, tags=[], up=False, ports=[], search=[], *args, **kwargs):
         s = Host.search()
-        if tags:
-            for tag in tags.split(','):
-                if tag[0] == '!':
-                    s = s.exclude("term", tags=tag[1:])
-                else:
-                    s = s.filter("term", tags=tag)
+        for tag in tags:
+            if tag[0] == '!':
+                s = s.exclude("term", tags=tag[1:])
+            else:
+                s = s.filter("term", tags=tag)
         if up:
             s = s.filter("term", status='up')
-        if ports:
-            for port in ports.split(','):
-                s = s.filter("match", open_ports=port)
-        if search:
-            for search_argument in search.split(','):
-                s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        for port in ports:
+            s = s.filter("match", open_ports=port)
+        for search_argument in search:
+            s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
         if kwargs.get('range'):
             s = s.filter('term', address=kwargs.get('range'))
         return s
@@ -289,10 +290,10 @@ class HostSearch(CoreSearch):
             Argparser option with search functionality specific for hosts.
         """
         core_parser = self.core_parser
-        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
-        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
-        core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
-        core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
+        core_parser.add_argument('-s', '--search', type=str, help="Search string to use", nargs="+", default=[])
+        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include", nargs="+", default=[])
+        core_parser.add_argument('-u', '--up', help="Only include hosts that are up", action="store_true")
+        core_parser.add_argument('-r', '--range', type=str, help="The CIDR range to include hosts from")
         return core_parser
 
 
@@ -303,22 +304,19 @@ class ServiceSearch(CoreSearch):
         self.object_type = Service
 
 
-    def create_search(self, tags='', up=False, ports='', search='', *args, **kwargs):
+    def create_search(self, tags=[], up=False, ports=[], search=[], *args, **kwargs):
         s = Service.search()
-        if tags:
-            for tag in tags.split(','):
-                if tag[0] == '!':
-                    s = s.exclude("term", tags=tag[1:])
-                else:
-                    s = s.filter("term", tags=tag)
+        for tag in tags:
+            if tag[0] == '!':
+                s = s.exclude("term", tags=tag[1:])
+            else:
+                s = s.filter("term", tags=tag)
         if up:
             s = s.filter("term", state='open')
-        if ports:
-            for port in ports.split(','):
-                s = s.filter("match", port=port)
-        if search:
-            for search_argument in search.split(','):
-                s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        for port in ports:
+            s = s.filter("match", port=port)
+        for search_argument in search:
+            s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
         if kwargs.get('range'):
             s = s.filter('term', address=kwargs.get('range'))
         return s
@@ -357,9 +355,9 @@ class ServiceSearch(CoreSearch):
             Argparser option with search functionality specific for hosts.
         """
         core_parser = self.core_parser
-        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
-        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
-        core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
+        core_parser.add_argument('-s', '--search', type=str, help="Search string to use", nargs="+", default=[])
+        core_parser.add_argument('-p', '--ports', type=str, help="Ports to include", nargs="+", default=[])
+        core_parser.add_argument('-u', '--up', help="Only ports that are open", action="store_true")
         core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
         return core_parser
 
@@ -377,21 +375,19 @@ class UserSearch(CoreSearch):
         self.object_type = User
 
 
-    def create_search(self, group='', tags='', search='', *args, **kwargs):
+    def create_search(self, group='', tags=[], search=[], *args, **kwargs):
         """
         """
         user_search = User.search()
-        if tags:
-            for tag in tags.split(','):
-                if tag[0] == '!':
-                    user_search = user_search.exclude("term", tags=tag[1:])
-                else:
-                    user_search = user_search.filter("term", tags=tag)
+        for tag in tags:
+            if tag[0] == '!':
+                user_search = user_search.exclude("term", tags=tag[1:])
+            else:
+                user_search = user_search.filter("term", tags=tag)
         if group:
             user_search = user_search.filter("term", groups=group)
-        if search:
-            for search_argument in search.split(','):
-                user_search = user_search.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        for search_argument in search:
+            user_search = user_search.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
         return user_search
 
 
@@ -430,7 +426,7 @@ class UserSearch(CoreSearch):
     @property
     def argparser(self):
         core_parser = self.core_parser
-        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
+        core_parser.add_argument('-s', '--search', type=str, help="Search string to use", nargs='+', default=[])
         core_parser.add_argument('-g', '--group', type=str, help="Group to include")
         return core_parser
 
