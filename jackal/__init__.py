@@ -1,2 +1,2 @@
-from jackal.core import CoreSearch, RangeSearch, HostSearch, ServiceSearch
-from jackal.documents import Host, Range, Service
+from jackal.core import CoreSearch, RangeSearch, HostSearch, ServiceSearch, UserSearch
+from jackal.documents import Host, Range, Service, User

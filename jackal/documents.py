@@ -149,3 +149,47 @@ class Host(DocType):
         else:
             return result
 
+class User(DocType):
+    """
+    """
+    username = Keyword(required=True)
+    tags = Keyword(multi=True)
+    description = Keyword()
+    name = Keyword()
+    domain = Keyword(multi=True)
+    flags = Keyword(multi=True)
+    sid = Keyword()
+    groups = Keyword(multi=True)
+    created_at = Date()
+    updated_at = Date()
+
+    class Meta:
+        index = "{}-users".format(config.get('jackal', 'index'))
+
+    def save(self, ** kwargs):
+        self.meta.id = self.username
+        self.created_at = datetime.now()
+        return super(User, self).save(** kwargs)
+
+    def update(self, ** kwargs):
+        self.updated_at = datetime.now()
+        return super(User, self).update(** kwargs)
+
+    def __init__(self, ** kwargs):
+        args = dict((k, v) for k, v in kwargs.items() if not k.startswith('_'))
+        super(User, self).__init__(** args)
+        self.meta.id = self.username
+
+    def add_tag(self, tag):
+        self.tags = list(set(self.tags or []) | set([tag]))
+
+    def remove_tag(self, tag):
+        self.tags = list(set(self.tags or []) - set([tag]))
+
+    def to_dict(self, include_meta=False):
+        result = super(User, self).to_dict(include_meta=include_meta)
+        if include_meta:
+            source = result.pop('_source')
+            return {**result, **source}
+        else:
+            return result

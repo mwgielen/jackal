@@ -3,7 +3,7 @@ import configparser
 import multiprocessing
 import os
 
-from jackal import HostSearch, RangeSearch, ServiceSearch
+from jackal import HostSearch, RangeSearch, ServiceSearch, UserSearch
 from jackal.config import Config
 from jackal.utils import print_error, print_notification, print_success
 from jackal.utils import PartialFormatter
@@ -61,6 +61,8 @@ def create_query(section):
         query['search'] = section['search']
     if 'tags' in section:
         query['tags'] = section['tags']
+    if 'groups' in section:
+        query['groups'] = section['groups']
 
     return query
 
@@ -70,7 +72,8 @@ def create_pipe_workers(configfile, directory):
         Creates the workers based on the given configfile to provide named pipes in the directory.
     """
     type_map = {'service': ServiceSearch,
-                'host': HostSearch, 'range': RangeSearch}
+                'host': HostSearch, 'range': RangeSearch,
+                'user': UserSearch}
     config = configparser.ConfigParser()
     config.read(configfile)
 

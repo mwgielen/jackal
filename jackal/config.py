@@ -98,34 +98,38 @@ def add_named_pipe():
     if not os.path.exists(pipes_config_path):
         print("First configure named pipes with jk-configure")
         return
-
-    name = required_input("What is the name of the named pipe? ")
-    object_type = input_with_default("What is the type of the named pipe? Pick from: [host, range, service]", 'service')
-    ports = input_with_default("What ports do you want to filter on? Empty for disable", '')
-    tags = input_with_default("What tags do you want to filter on? Empty for disable", '')
-    search = input_with_default("What search query do you want to use?", '')
-    up = (input_with_default("Do you want to include only up hosts/services?", 'n').lower() == 'y')
-    unique = (input_with_default("Do you want to only show unique results?", 'n').lower() == 'y')
-    output_format = input_with_default("How do you want the results to be formatted?", '{address}')
-
-    print("Adding new named pipe")
     pipes_config = configparser.ConfigParser()
     pipes_config.read(pipes_config_path)
-
+    name = required_input("What is the name of the named pipe? ")
     pipes_config[name] = {}
+    object_type = input_with_default("What is the type of the named pipe? Pick from: [host, range, service, user]", 'service')
     pipes_config[name]['type'] = object_type
-    if ports:
-        pipes_config[name]['ports'] = ports
+    if object_type in ['host', 'range', 'service']:
+        ports = input_with_default("What ports do you want to filter on? Empty for disable", '')
+        if ports:
+            pipes_config[name]['ports'] = ports
+        tags = input_with_default("What tags do you want to filter on? Empty for disable", '')
+        if tags:
+            pipes_config[name]['tags'] = tags
+        up = (input_with_default("Do you want to include only up hosts/services?", 'n').lower() == 'y')
+        if up:
+            pipes_config[name]['up'] = '1'
+    elif object_type == 'user':
+        groups = input_with_default("What group do you want to filter on? Empty for disable", '')
+        if groups:
+            pipes_config[name]['groups'] = groups
+
+    search = input_with_default("What search query do you want to use?", '')
     if search:
         pipes_config[name]['search'] = search
-    if tags:
-        pipes_config[name]['tags'] = tags
-    if up:
-        pipes_config[name]['up'] = '1'
+    unique = (input_with_default("Do you want to only show unique results?", 'n').lower() == 'y')
     if unique:
         pipes_config[name]['unique'] = '1'
 
+    output_format = input_with_default("How do you want the results to be formatted?", '{address}')
     pipes_config[name]['format'] = output_format
+
+    print("Adding new named pipe")
     with open(pipes_config_path, 'w') as f:
         pipes_config.write(f)
 
@@ -223,9 +227,10 @@ class Config(object):
 
         if initialize_indices:
             index = self.get('jackal', 'index')
-            from jackal import Host, Range, Service
+            from jackal import Host, Range, Service, User
             from jackal.core import create_connection
             create_connection(self)
             Host.init(index="{}-hosts".format(index))
             Range.init(index="{}-ranges".format(index))
             Service.init(index="{}-services".format(index))
+            User.init(index="{}-users".format(index))

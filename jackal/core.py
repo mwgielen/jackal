@@ -8,7 +8,7 @@ import urllib3
 from elasticsearch import NotFoundError, ConnectionError, TransportError
 from elasticsearch_dsl.connections import connections
 from jackal.config import Config
-from jackal.documents import Host, Range, Service
+from jackal.documents import Host, Range, Service, User
 from jackal.utils import print_error
 
 # Disable warnings for now.
@@ -149,6 +149,10 @@ class CoreSearch(object):
                 for key in new:
                     if self.object_type._doc_type.mapping[key]._multi:
                         value = old.get(key, [])
+                        if not isinstance(value, list):
+                            value = [value]
+                        if not isinstance(new[key], list):
+                            new[key] = [new[key]]
                         value.extend(new[key])
                         update[key] = list(set(value))
                     else:
@@ -163,7 +167,6 @@ class CoreSearch(object):
     @property
     def core_parser(self):
         core_parser = argparse.ArgumentParser(add_help=True)
-        core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
         core_parser.add_argument('-t', '--tag', type=str, help="Tag(s) to search for, use (!) for not search, comma (,) to seperate tags", dest='tags')
         return core_parser
 
@@ -223,7 +226,9 @@ class RangeSearch(CoreSearch):
         """
             Argparser option with search functionality specific for ranges.
         """
-        return self.core_parser
+        core_parser = self.core_parser
+        core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
+        return core_parser
 
 
 class HostSearch(CoreSearch):
@@ -287,6 +292,7 @@ class HostSearch(CoreSearch):
         core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
         core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
         core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
+        core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
         return core_parser
 
 
@@ -354,6 +360,78 @@ class ServiceSearch(CoreSearch):
         core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
         core_parser.add_argument('-p', '--ports', type=str, help="Ports to include")
         core_parser.add_argument('-u', '--up', help="Only hosts / ports that are open / up", action="store_true")
+        core_parser.add_argument('-r', '--range', type=str, help="The range / host to use")
+        return core_parser
+
+
+class UserSearch(CoreSearch):
+    """
+        Class to provide search functionality for users.
+        Two search attributes are implemented:
+            - Search
+            - Group
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(UserSearch, self).__init__(*args, **kwargs)
+        self.object_type = User
+
+
+    def create_search(self, group='', tags='', search='', *args, **kwargs):
+        """
+        """
+        user_search = User.search()
+        if tags:
+            for tag in tags.split(','):
+                if tag[0] == '!':
+                    user_search = user_search.exclude("term", tags=tag[1:])
+                else:
+                    user_search = user_search.filter("term", tags=tag)
+        if group:
+            user_search = user_search.filter("term", groups=group)
+        if search:
+            for search_argument in search.split(','):
+                user_search = user_search.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        return user_search
+
+
+    def id_to_object(self, line):
+        """
+            Resolves the given id to a user object, if it doesn't exists it will be created.
+        """
+        user = User.get(line, ignore=404)
+        if not user:
+            user = User(username=line)
+            user.save()
+        return user
+
+
+    def object_to_id(self, obj):
+        """
+            Returns the 'username' value of the given object if it exists, else returns None
+        """
+        try:
+            return obj.username
+        except AttributeError:
+            return None
+
+    def get_users(self, *args, **kwargs):
+        """
+            Retrieves the users from elastic.
+        """
+        arguments, _ = self.argparser.parse_known_args()
+        if self.is_pipe and self.use_pipe:
+            return self.get_pipe(self.object_type)
+        elif arguments.tags or arguments.group or arguments.search:
+            return self.argument_search()
+        else:
+            return self.search(*args, **kwargs)
+
+    @property
+    def argparser(self):
+        core_parser = self.core_parser
+        core_parser.add_argument('-S', '--search', type=str, help="Search string to use")
+        core_parser.add_argument('-g', '--group', type=str, help="Group to include")
         return core_parser
 
 
@@ -363,7 +441,7 @@ class DocMapper(object):
         Only works for json input type
     """
 
-    object_mapping = {'range': Range, 'host': Host, 'service': Service}
+    object_mapping = {'range': Range, 'host': Host, 'service': Service, 'user': User }
 
     def __init__(self):
         self.is_pipe = not isatty(sys.stdin.fileno())
