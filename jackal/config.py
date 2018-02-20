@@ -4,10 +4,7 @@
 from builtins import input
 from os.path import expanduser
 import os
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
+import configparser
 
 
 def input_with_default(question, default):

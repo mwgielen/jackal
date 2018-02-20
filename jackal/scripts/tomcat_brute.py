@@ -5,7 +5,6 @@ import grequests
 import gevent
 from jackal import ServiceSearch
 from jackal.utils import print_success, print_notification, print_error
-from builtins import input
 
 
 def brutefore_passwords(ip, url, credentials):
