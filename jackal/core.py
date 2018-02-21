@@ -8,7 +8,7 @@ import urllib3
 from elasticsearch import NotFoundError, ConnectionError, TransportError
 from elasticsearch_dsl.connections import connections
 from jackal.config import Config
-from jackal.documents import Host, Range, Service, User
+from jackal.documents import Host, Range, Service, User, JackalDoc
 from jackal.utils import print_error
 
 # Disable warnings for now.
@@ -46,7 +46,7 @@ class CoreSearch(object):
     def __init__(self, use_pipe=True, *args, **kwargs):
         self.is_pipe = not isatty(sys.stdin.fileno())
         self.use_pipe = use_pipe
-        self.object_type = None
+        self.object_type = JackalDoc
 
 
     def search(self, number=None, *args, **kwargs):
@@ -140,8 +140,7 @@ class CoreSearch(object):
         """
             Merge
             new: object to be merged.
-            object_type: type of the to be merged object
-            id_value: name of the value in new that is the id of the object.
+            returns new if no object exists yet or returns a merged object.
         """
         object_id = self.object_to_id(new)
         if object_id:
@@ -158,15 +157,18 @@ class CoreSearch(object):
                         if not isinstance(new[key], list):
                             new[key] = [new[key]]
                         value.extend(new[key])
-                        update[key] = list(set(value))
+                        try:
+                            update[key] = list(set(value))
+                        except TypeError:
+                            update[key] = value
                     else:
                         value = new[key]
                         update[key] = value
-                elastic_object.update(**update)
+                return self.object_type(**update)
             else:
-                new.save()
+                return new
         else:
-            new.save()
+            return new
 
     @property
     def core_parser(self):

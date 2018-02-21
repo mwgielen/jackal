@@ -75,7 +75,7 @@ def parse_domain_computers(filename):
             host.os = parsed.os
             host.domain_controller = parsed.dc
             host.add_tag('domaindump')
-            hs.merge(host)
+            hs.merge(host).save()
             count += 1
         sys.stdout.write('\r')
         sys.stdout.write(
@@ -164,7 +164,7 @@ def parse_domain_users(domain_users_file, domain_groups_file):
         result = parse_user(entry, domain_groups)
         user = User(**result)
         user.add_tag("domaindump")
-        user_search.merge(user)
+        user_search.merge(user).save()
         count += 1
         sys.stdout.write('\r')
         sys.stdout.write("[{}/{}]".format(count, total))

@@ -52,14 +52,14 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
                 for service in nmap_host.services:
                     serv = Service(**service.get_dict())
                     serv.address = nmap_host.address
-                    service_search.merge(serv)
+                    service_search.merge(serv).save()
                     if service.state == 'open':
                         host.open_ports.append(service.port)
                     if service.state == 'closed':
                         host.closed_ports.append(service.port)
                     if service.state == 'filtered':
                         host.filtered_ports.append(service.port)
-            host_search.merge(host)
+            host_search.merge(host).save()
     if imports:
         print_success("Imported {} hosts, with tag {}".format(imports, tag))
     else:
@@ -133,7 +133,7 @@ def nmap_discover():
     for r in ranges:
         ips.append(r.range)
         r.add_tag(tag)
-        rs.merge(r)
+        rs.merge(r).save()
 
 
 def nmap_scan():

@@ -35,12 +35,6 @@ class JackalDoc(DocType):
         self.tags = list(set(self.tags or []) - set([tag]))
 
 
-    def update(self, **kwargs):
-        """
-            Sets the updated_at and updates the object.
-        """
-        self.updated_at = datetime.now()
-        return super(JackalDoc, self).update(** kwargs)
 
 
     def to_dict(self, include_meta=False):
@@ -127,6 +121,7 @@ class Host(JackalDoc):
         super(Host, self).__init__(**kwargs)
         self.meta.id = self.address
 
+    class Meta:
 
 class User(JackalDoc):
     """
