@@ -224,10 +224,11 @@ class Config(object):
 
         if initialize_indices:
             index = self.get('jackal', 'index')
-            from jackal import Host, Range, Service, User
+            from jackal import Host, Range, Service, User, Credential
             from jackal.core import create_connection
             create_connection(self)
             Host.init(index="{}-hosts".format(index))
             Range.init(index="{}-ranges".format(index))
             Service.init(index="{}-services".format(index))
             User.init(index="{}-users".format(index))
+            Credential.init(index="{}-creds".format(index))

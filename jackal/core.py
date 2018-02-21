@@ -8,7 +8,7 @@ import urllib3
 from elasticsearch import NotFoundError, ConnectionError, TransportError
 from elasticsearch_dsl.connections import connections
 from jackal.config import Config
-from jackal.documents import Host, Range, Service, User, JackalDoc
+from jackal.documents import Host, Range, Service, User, Credential, JackalDoc
 from jackal.utils import print_error
 
 # Disable warnings for now.
@@ -429,7 +429,104 @@ class UserSearch(CoreSearch):
     def argparser(self):
         core_parser = self.core_parser
         core_parser.add_argument('-s', '--search', type=str, help="Search string to use", nargs='+', default=[])
-        core_parser.add_argument('-g', '--group', type=str, help="Group to include")
+        core_parser.add_argument('-g', '--group', type=str, help="Group to include", default='')
+        return core_parser
+
+
+class CredentialSearch(CoreSearch):
+    """
+        Class to provide search functionality for credentials.
+        Two search attributes are implemented:
+            - Search
+            - Type
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(CredentialSearch, self).__init__(*args, **kwargs)
+        self.object_type = Credential
+
+
+    def create_search(self, group='', tags=[], search=[], password='', cracked=False, type='', *args, **kwargs):
+        """
+        """
+        # print(password)
+        s = Credential.search()
+        for tag in tags:
+            if tag[0] == '!':
+                s = s.exclude("term", tags=tag[1:])
+            else:
+                s = s.filter("term", tags=tag)
+        if group:
+            s = s.filter("term", groups=group)
+        if type:
+            s = s.filter("term", type=type)
+        if password:
+            s = s.filter("term", secret=password)
+        if cracked:
+            s = s.filter("term", cracked=True)
+        if kwargs.get('range', ''):
+            s = s.filter("term", host_ip=kwargs.get('range'))
+        for search_argument in search:
+            s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        return s
+
+
+
+    def id_to_object(self, line):
+        """
+            Resolves the given id to a credential object, if it doesn't exists it will be created.
+        """
+        cred = Credential.get(line)
+        return cred
+
+
+    def object_to_id(self, obj):
+        """
+            Searches elasticsearch for objects with the same username, password, optional domain, host_ip and service_id.
+        """
+        # Not sure yet if this is advisable... Older passwords can be overwritten...
+        search = Credential.search()
+        search = search.filter("term", username=obj.username)
+        search = search.filter("term", secret=obj.secret)
+        if obj.domain:
+            search = search.filter("term", domain=obj.domain)
+        else:
+            search = search.exclude("exists", field="domain")
+        if obj.host_ip:
+            search = search.filter("term", host_ip=obj.host_ip)
+        else:
+            search = search.exclude("exists", field="host_ip")
+        if obj.service_id:
+            search = search.filter("term", service_id=obj.service_id)
+        else:
+            search = search.exclude("exists", field="service_id")
+        if search.count():
+            result = search[0].execute()[0]
+            return result.meta.id
+        else:
+            return None
+
+
+    def get_credentials(self, *args, **kwargs):
+        """
+            Retrieves the users from elastic.
+        """
+        arguments, _ = self.argparser.parse_known_args()
+        if self.is_pipe and self.use_pipe:
+            return self.get_pipe(self.object_type)
+        elif arguments.tags or arguments.type or arguments.search or arguments.password or arguments.cracked or arguments.range:
+            return self.argument_search()
+        else:
+            return self.search(*args, **kwargs)
+
+    @property
+    def argparser(self):
+        core_parser = self.core_parser
+        core_parser.add_argument('-s', '--search', type=str, help="Search string to use", nargs='+', default=[])
+        core_parser.add_argument('--type', type=str, help="Type of credentials to include")
+        core_parser.add_argument('-p', '--password', type=str, help="Password to search for")
+        core_parser.add_argument('--cracked', help="Only include hashes / passwords that were cracked", action="store_true")
+        core_parser.add_argument('-r', '--range', type=str, help="Range/IP to find results")
         return core_parser
 
 
@@ -439,7 +536,7 @@ class DocMapper(object):
         Only works for json input type
     """
 
-    object_mapping = {'range': Range, 'host': Host, 'service': Service, 'user': User }
+    object_mapping = {'range': Range, 'host': Host, 'service': Service, 'user': User , 'credential': Credential}
 
     def __init__(self):
         self.is_pipe = not isatty(sys.stdin.fileno())

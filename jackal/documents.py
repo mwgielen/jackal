@@ -121,7 +121,25 @@ class Host(JackalDoc):
         super(Host, self).__init__(**kwargs)
         self.meta.id = self.address
 
+
+class Credential(JackalDoc):
+    """
+        User passwords document
+    """
+    secret = Keyword(required=True)
+    username = Keyword(required=True)
+    plaintext = Keyword()
+    cracked = Boolean()
+    domain = Keyword()
+    type = Keyword(required=True)
+    access_level = Keyword()
+    service_id = Keyword()
+    host_ip = Ip()
+    description = Keyword()
+
     class Meta:
+        index = "{}-creds".format(config.get('jackal', 'index'))
+
 
 class User(JackalDoc):
     """
@@ -142,7 +160,6 @@ class User(JackalDoc):
     def save(self, **kwargs):
         self.meta.id = self.username
         return super(User, self).save(**kwargs)
-
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
