@@ -536,7 +536,7 @@ class DocMapper(object):
         Only works for json input type
     """
 
-    object_mapping = {'range': Range, 'host': Host, 'service': Service, 'user': User , 'credential': Credential}
+    object_mapping = {'ranges': Range, 'hosts': Host, 'services': Service, 'users': User , 'credentials': Credential}
 
     def __init__(self):
         self.is_pipe = not isatty(sys.stdin.fileno())
@@ -550,7 +550,8 @@ class DocMapper(object):
         for line in sys.stdin:
             try:
                 data = json.loads(line.strip())
-                object_type = self.object_mapping[data['_type']]
+                index_name = data['_index']
+                object_type = self.object_mapping[index_name.split('-')[-1]]
                 obj = object_type(**data)
                 yield obj
             except ValueError:
