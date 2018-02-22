@@ -541,6 +541,12 @@ class DocMapper(object):
     def __init__(self):
         self.is_pipe = not isatty(sys.stdin.fileno())
 
+    def line_to_object(self, line):
+        data = json.loads(line.strip())
+        index_name = data['_index']
+        object_type = self.object_mapping[index_name.split('-')[-1]]
+        obj = object_type(**data)
+        return obj
 
     def get_pipe(self):
         """
@@ -549,11 +555,7 @@ class DocMapper(object):
         """
         for line in sys.stdin:
             try:
-                data = json.loads(line.strip())
-                index_name = data['_index']
-                object_type = self.object_mapping[index_name.split('-')[-1]]
-                obj = object_type(**data)
-                yield obj
+                yield self.line_to_object(line.strip())
             except ValueError:
                 pass
             except KeyError:
