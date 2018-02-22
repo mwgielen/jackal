@@ -33,6 +33,7 @@ def overview():
             formatted_ranges.append({'mask': r.range})
             tags_lookup[r.range] = r.tags
         search = Host.search()
+        search = search.filter('term', status='up')
         search.aggs.bucket('hosts', 'ip_range', field='address', ranges=formatted_ranges)
         response = search.execute()
         print_line("{0:<18} {1:<6} {2}".format("Range", "Count", "Tags"))
