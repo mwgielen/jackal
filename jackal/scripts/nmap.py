@@ -56,8 +56,9 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
                         serv_old = Service.get(service_id)
                         if service.banner:
                             serv_old.banner = service.banner
-                        if service.script_results:
-                            serv_old.script_results.extend(service.script_results)
+                        # TODO implement
+                        # if service.script_results:
+                            # serv_old.script_results.extend(service.script_results)
                         serv_old.save()
                     else:
                         # New object
