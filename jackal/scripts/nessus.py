@@ -81,7 +81,7 @@ def main():
 
     for host in hosts:
         host.add_tag('nessus')
-        core.merge(host).save()
+        host.save()
 
 
 if __name__ == '__main__':

@@ -40,26 +40,36 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
     for nmap_host in report.hosts:
         if check_function(nmap_host):
             imports += 1
-            host = Host()
-            host.address = nmap_host.address
-            host.add_tag(tag)
+            host = host_search.id_to_object(nmap_host.address)
             host.status = nmap_host.status
             if nmap_host.os_fingerprinted:
                 host.os = nmap_host.os_fingerprint
             if nmap_host.hostnames:
-                host.hostname = nmap_host.hostnames
+                host.hostname.apend(nmap_host.hostnames)
             if import_services:
                 for service in nmap_host.services:
                     serv = Service(**service.get_dict())
                     serv.address = nmap_host.address
-                    service_search.merge(serv).save()
+                    service_id = service_search.object_to_id(serv)
+                    if service_id:
+                        # Existing object, save the banner and script results.
+                        serv_old = Service.get(service_id)
+                        if service.banner:
+                            serv_old.banner = service.banner
+                        if service.script_results:
+                            serv_old.script_results.extend(service.script_results)
+                        serv_old.save()
+                    else:
+                        # New object
+                        serv.address = nmap_host.address
+                        serv.save()
                     if service.state == 'open':
                         host.open_ports.append(service.port)
                     if service.state == 'closed':
                         host.closed_ports.append(service.port)
                     if service.state == 'filtered':
                         host.filtered_ports.append(service.port)
-            host_search.merge(host).save()
+            host.save()
     if imports:
         print_success("Imported {} hosts, with tag {}".format(imports, tag))
     else:
@@ -131,9 +141,8 @@ def nmap_discover():
     import_nmap(result, tag, check_function)
 
     for r in ranges:
-        ips.append(r.range)
         r.add_tag(tag)
-        rs.merge(r).save()
+        r.save()
 
 
 def nmap_scan():

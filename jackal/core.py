@@ -93,6 +93,7 @@ class CoreSearch(object):
         except (ConnectionError, TransportError):
             print_error("Cannot connect to elasticsearch")
 
+
     def argument_count(self):
         """
             Uses the command line arguments to fill the count function and call it.
@@ -135,40 +136,6 @@ class CoreSearch(object):
             except ValueError:
                 yield self.id_to_object(line.strip())
 
-
-    def merge(self, new):
-        """
-            Merge
-            new: object to be merged.
-            returns new if no object exists yet or returns a merged object.
-        """
-        object_id = self.object_to_id(new)
-        if object_id:
-            elastic_object = self.object_type.get(object_id, ignore=404)
-            if elastic_object:
-                update = {}
-                old = elastic_object.to_dict()
-                new = new.to_dict()
-                for key in new:
-                    if self.object_type._doc_type.mapping[key]._multi:
-                        value = old.get(key, [])
-                        if not isinstance(value, list):
-                            value = [value]
-                        if not isinstance(new[key], list):
-                            new[key] = [new[key]]
-                        value.extend(new[key])
-                        try:
-                            update[key] = list(set(value))
-                        except TypeError:
-                            update[key] = value
-                    else:
-                        value = new[key]
-                        update[key] = value
-                return self.object_type(**update)
-            else:
-                return new
-        else:
-            return new
 
     @property
     def core_parser(self):

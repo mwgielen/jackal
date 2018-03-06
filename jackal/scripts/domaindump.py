@@ -73,12 +73,13 @@ def parse_domain_computers(filename):
         parsed = parse_single_computer(system)
         if parsed.ip:
             host = hs.id_to_object(parsed.ip)
-            host.description = [parsed.description]
-            host.hostname = [parsed.dns_hostname]
-            host.os = parsed.os
+            host.description.append(parsed.description)
+            host.hostname.append(parsed.dns_hostname)
+            if parsed.os:
+                host.os = parsed.os
             host.domain_controller = parsed.dc
             host.add_tag('domaindump')
-            hs.merge(host).save()
+            host.save()
             count += 1
         sys.stdout.write('\r')
         sys.stdout.write(
@@ -165,9 +166,13 @@ def parse_domain_users(domain_users_file, domain_groups_file):
     print_notification("Importing {} users".format(total))
     for entry in users:
         result = parse_user(entry, domain_groups)
-        user = User(**result)
+        user = user_search.id_to_object(result['username'])
+        user.name = result['name']
+        user.domain.append(result['domain'])
+        user.description = result['description']
+        user.sid = result['sid']
         user.add_tag("domaindump")
-        user_search.merge(user).save()
+        user.save()
         count += 1
         sys.stdout.write('\r')
         sys.stdout.write("[{}/{}]".format(count, total))
