@@ -169,7 +169,7 @@ def nmap_scan():
 
     # Fix the tags for the search
     tags = nmap_types[nmap_types.index(arguments.type):]
-    tags = ["!nmap_".join(tag) for tag in tags]
+    tags = ["!nmap_" + tag  for tag in tags]
 
     hosts = hs.get_hosts(tags=tags)
 
