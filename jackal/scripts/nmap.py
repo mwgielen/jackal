@@ -130,7 +130,7 @@ def nmap_discover():
         nmap_args.append('-sL')
         check_function = include_hostnames
 
-    ranges = rs.get_ranges(tags='!{}'.format(tag))
+    ranges = rs.get_ranges(tags=['!{}'.format(tag)])
     ranges = [r for r in ranges]
     ips = []
     for r in ranges:
@@ -169,7 +169,7 @@ def nmap_scan():
 
     # Fix the tags for the search
     tags = nmap_types[nmap_types.index(arguments.type):]
-    tags = "!nmap_" + ",!nmap_".join(tags)
+    tags = ["!nmap_".join(tag) for tag in tags]
 
     hosts = hs.get_hosts(tags=tags)
 

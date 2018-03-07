@@ -54,15 +54,15 @@ def create_query(section):
     query = {}
 
     if 'ports' in section:
-        query['ports'] = section['ports']
+        query['ports'] = [section['ports']]
     if 'up' in section:
         query['up'] = bool(section['up'])
     if 'search' in section:
-        query['search'] = section['search']
+        query['search'] = [section['search']]
     if 'tags' in section:
-        query['tags'] = section['tags']
+        query['tags'] = [section['tags']]
     if 'groups' in section:
-        query['groups'] = section['groups']
+        query['groups'] = [section['groups']]
 
     return query
 
