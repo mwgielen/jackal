@@ -45,7 +45,7 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
             if nmap_host.os_fingerprinted:
                 host.os = nmap_host.os_fingerprint
             if nmap_host.hostnames:
-                host.hostname.apend(nmap_host.hostnames)
+                host.hostname.append(nmap_host.hostnames)
             if import_services:
                 for service in nmap_host.services:
                     serv = Service(**service.get_dict())
@@ -181,7 +181,7 @@ def nmap_scan():
 
     # Run nmap
     print_notification("Running nmap with args: {} on {} hosts(s)".format(nmap_args, len(hosts)))
-    result = nmap(nmap_args, [h.address for h in hosts])
+    result = nmap(nmap_args, [str(h.address) for h in hosts])
     # Import the nmap result
     import_nmap(result, "nmap_{}".format(arguments.type), check_function=all_hosts, import_services=True)
 
