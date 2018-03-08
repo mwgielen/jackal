@@ -32,6 +32,9 @@ def create_connection(conf):
         host_config['client_cert'] = conf.get('jackal', 'client_cert')
         host_config['client_key'] = conf.get('jackal', 'client_key')
 
+    # Disable hostname checking for now.
+    host_config['ssl_assert_hostname'] = False
+
     connections.create_connection(**host_config)
 
 config = Config()
