@@ -16,8 +16,9 @@ def main():
     creds = CredentialSearch()
     try:
         print_notification("Connected to: {} [{}]".format(connections.get_connection().info()['cluster_name'], config.get('jackal', 'host')))
-    except (ConnectionError, TransportError):
+    except (ConnectionError, TransportError) as e:
         print_error("Cannot connect to the elasticsearch instance")
+        print_error(e)
         sys.exit(1)
 
     print_notification("Index: {}".format(config.get('jackal', 'index')))
