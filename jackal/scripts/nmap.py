@@ -143,6 +143,7 @@ def nmap_discover():
     if arguments.type == 'ping':
         tag = 'nmap_ping'
         nmap_args.append('-sn')
+        nmap_args.append('-n')
         check_function = include_up_hosts
     elif arguments.type == 'lookup':
         tag = 'nmap_lookup'
@@ -211,7 +212,7 @@ def nmap_smb_vulnscan():
         Scans available smb services in the database for smb signing and ms17-010.
     """
     service_search = ServiceSearch()
-    services = service_search.get_services(ports='445', tags='!smb_vulnscan', up=True)
+    services = service_search.get_services(ports=['445'], tags=['!smb_vulnscan'], up=True)
     service_dict = {}
     for service in services:
         service_dict[service.address] = service

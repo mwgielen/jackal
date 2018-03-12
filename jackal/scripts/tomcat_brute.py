@@ -42,7 +42,7 @@ def main():
         print_error("Please provide a file with credentials seperated by ':'")
         sys.exit()
 
-    services = services.get_services(search="Tomcat", up=True, tags='!tomcat_brute')
+    services = services.get_services(search=["Tomcat"], up=True, tags=['!tomcat_brute'])
 
     credentials = []
     with open(arguments.file, 'r') as f:

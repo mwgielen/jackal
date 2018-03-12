@@ -131,12 +131,12 @@ for r in ranges.get_ranges():
 # Disables the pipe
 hosts = HostSearch(use_pipe=False)
 # Optional search options can be given, if a user gives no search parameters, these will be used.
-for h in hosts.get_hosts(ports='445'):
+for h in hosts.get_hosts(ports=['445']):
     print_json(h.to_dict())
 
 services = ServiceSearch()
 # The search function will always honor the given arguments, user input and piped objects are ignored.
-for s in services.search(ports='445'):
+for s in services.search(ports=['445']):
     print_json(s.to_dict())
 ```
 
