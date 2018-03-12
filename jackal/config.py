@@ -28,9 +28,11 @@ def manual_configure():
     print("Manual configuring jackal")
     mapping = { '1': 'y', '0': 'n'}
     config = Config()
+    # Host
     host = input_with_default("What is the Elasticsearch host?", config.get('jackal', 'host'))
     config.set('jackal', 'host', host)
 
+    # SSL
     if input_with_default("Use SSL?", mapping[config.get('jackal', 'use_ssl')]) == 'y':
         config.set('jackal', 'use_ssl', '1')
         if input_with_default("Setup custom server cert?", 'y') == 'y':
@@ -50,14 +52,20 @@ def manual_configure():
     else:
         config.set('jackal', 'client_certs', '0')
 
-
+    # Index
     index = input_with_default("What index prefix should jackal use?", config.get('jackal', 'index'))
     config.set('jackal', 'index', index)
-    initialize_indices = (input_with_default("Do you want to initialize the indices?", 'n').lower() == 'y')
+    initialize_indices = (input_with_default("Do you want to initialize the indices?", 'y').lower() == 'y')
 
+    # Nmap
+    nmap_dir = input_with_default("What directory do you want to place the nmap results in?", config.get('nmap', 'directory'))
+    if not os.path.exists(nmap_dir):
+        os.makedirs(nmap_dir)
+    config.set('nmap', 'directory', nmap_dir)
     nmap_options = input_with_default("What nmap options do you want to set for 'custom' (for example '-p 22,445')?", config.get('nmap', 'options'))
     config.set('nmap', 'options', nmap_options)
 
+    # Nessus
     configure_nessus = (input_with_default("Do you want to setup nessus?", 'n').lower() == 'y')
     if configure_nessus:
         nessus_host = input_with_default("What is the nessus host?", config.get('nessus', 'host'))
@@ -69,6 +77,7 @@ def manual_configure():
         config.set('nessus', 'access_key', nessus_access)
         config.set('nessus', 'secret_key', nessus_secret)
 
+    # Named pipes
     configure_pipes = (input_with_default("Do you want to setup named pipes?", 'n').lower() == 'y')
     if configure_pipes:
         directory = input_with_default("What directory do you want to place the named pipes in?", config.get('pipes', 'directory'))
@@ -136,34 +145,37 @@ class Config(object):
         The class that represents the jackal configuration.
         This class will try to read the config file from the users home directory.
     """
-    defaults = {
-        'jackal':
-            {
-                'host': 'localhost',
-                'index': 'jackal',
-                'use_ssl': '0',
-                'client_certs': '0',
-                'ca_certs': '',
-                'client_cert': '',
-                'client_key': '',
-            },
-        'nessus':
-            {
-                'host': 'https://localhost:8834',
-                'template_name': 'advanced',
-                'access_key': '',
-                'secret_key': '',
-            },
-        'pipes':
-            {
-                'directory': os.getcwd(),
-                'config_file': 'pipes.ini'
-            },
-        'nmap':
-            {
-                'options': '',
+    @property
+    def defaults(self):
+        return {
+            'jackal':
+                {
+                    'host': 'localhost',
+                    'index': 'jackal',
+                    'use_ssl': '0',
+                    'client_certs': '0',
+                    'ca_certs': '',
+                    'client_cert': '',
+                    'client_key': '',
+                },
+            'nessus':
+                {
+                    'host': 'https://localhost:8834',
+                    'template_name': 'advanced',
+                    'access_key': '',
+                    'secret_key': '',
+                },
+            'pipes':
+                {
+                    'directory': os.getcwd(),
+                    'config_file': 'pipes.ini'
+                },
+            'nmap':
+                {
+                    'options': '',
+                    'directory': os.path.join(self.config_dir, 'nmap'),
+                }
             }
-        }
 
     def __init__(self):
         self.config = configparser.ConfigParser()

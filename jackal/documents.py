@@ -115,6 +115,10 @@ class Host(JackalDoc):
 
     def save(self, **kwargs):
         self.meta.id = self.address
+        try:
+            self.hostname = list(set(self.hostname))
+        except TypeError:
+            pass
         return super(Host, self).save(** kwargs)
 
     def __init__(self, ** kwargs):

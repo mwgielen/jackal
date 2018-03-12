@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import argparse
+import os
+import subprocess
 import sys
-
-from libnmap.parser import NmapParser, NmapParserException
-from libnmap.process import NmapProcess
+import datetime
 
 from jackal import Host, HostSearch, RangeSearch, Service, ServiceSearch
-from jackal.utils import print_error, print_notification, print_success
 from jackal.config import Config
+from jackal.utils import print_error, print_notification, print_success
+from libnmap.parser import NmapParser, NmapParserException
+from libnmap.process import NmapProcess
 
 
 def all_hosts(*args, **kwargs):
@@ -42,10 +44,11 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
             imports += 1
             host = host_search.id_to_object(nmap_host.address)
             host.status = nmap_host.status
+            host.add_tag(tag)
             if nmap_host.os_fingerprinted:
                 host.os = nmap_host.os_fingerprint
             if nmap_host.hostnames:
-                host.hostname.append(nmap_host.hostnames)
+                host.hostname.extend(nmap_host.hostnames)
             if import_services:
                 for service in nmap_host.services:
                     serv = Service(**service.get_dict())
@@ -99,10 +102,26 @@ def nmap(nmap_args, ips):
     """
         Start an nmap process with the given args on the given ips.
     """
-    nm = NmapProcess(targets=ips, options=nmap_args)
-    print_notification("Invoking sudo")
-    nm.sudo_run()
-    return nm.stdout
+    config = Config()
+    arguments = ['/usr/bin/sudo', 'nmap']
+    arguments.extend(ips)
+    arguments.extend(nmap_args)
+    output_file = ''
+    now = datetime.datetime.now()
+    if not '-oA' in nmap_args:
+        output_name = 'nmap_jackal_{}'.format(now.strftime("%Y-%m-%d %H:%M"))
+        path_name = os.path.join(config.config_dir, 'nmap', output_name)
+        print_notification("Writing output of nmap to {}".format(path_name))
+        output_file = path_name + '.xml'
+        arguments.extend(['-oA', path_name])
+    else:
+        output_file = nmap_args[nmap_args.index('-oA') + 1] + '.xml'
+
+    print_notification("Starting nmap")
+    subprocess.call(arguments)
+
+    with open(output_file, 'r') as f:
+        return f.read()
 
 
 def nmap_discover():
@@ -136,7 +155,6 @@ def nmap_discover():
     for r in ranges:
         ips.append(r.range)
 
-    nmap_args= " ".join(nmap_args)
     print_notification("Running nmap with args: {} on {} range(s)".format(nmap_args, len(ips)))
     result = nmap(nmap_args, ips)
     import_nmap(result, tag, check_function)
@@ -176,14 +194,16 @@ def nmap_scan():
     # Create the nmap arguments
     nmap_args = []
     nmap_args.extend(extra_nmap_args)
-    nmap_args.append(options[arguments.type])
-    nmap_args = " ".join(nmap_args)
+    nmap_args.extend(options[arguments.type].split(' '))
 
     # Run nmap
     print_notification("Running nmap with args: {} on {} hosts(s)".format(nmap_args, len(hosts)))
-    result = nmap(nmap_args, [str(h.address) for h in hosts])
-    # Import the nmap result
-    import_nmap(result, "nmap_{}".format(arguments.type), check_function=all_hosts, import_services=True)
+    if len(hosts):
+        result = nmap(nmap_args, [str(h.address) for h in hosts])
+        # Import the nmap result
+        import_nmap(result, "nmap_{}".format(arguments.type), check_function=all_hosts, import_services=True)
+    else:
+        print_notification("No hosts found")
 
 
 def nmap_smb_vulnscan():
