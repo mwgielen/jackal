@@ -44,7 +44,6 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
             imports += 1
             host = host_search.id_to_object(nmap_host.address)
             host.status = nmap_host.status
-            host.add_tag(tag)
             if nmap_host.os_fingerprinted:
                 host.os = nmap_host.os_fingerprint
             if nmap_host.hostnames:
@@ -75,7 +74,7 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
                         host.filtered_ports.append(service.port)
             host.save()
     if imports:
-        print_success("Imported {} hosts, with tag {}".format(imports, tag))
+        print_success("Imported {} hosts".format(imports))
     else:
         print_error("No hosts found")
 
@@ -158,11 +157,10 @@ def nmap_discover():
 
     print_notification("Running nmap with args: {} on {} range(s)".format(nmap_args, len(ips)))
     result = nmap(nmap_args, ips)
-    import_nmap(result, tag, check_function)
-
     for r in ranges:
         r.add_tag(tag)
         r.save()
+    import_nmap(result, tag, check_function)
 
 
 def nmap_scan():
@@ -202,6 +200,10 @@ def nmap_scan():
     if len(hosts):
         result = nmap(nmap_args, [str(h.address) for h in hosts])
         # Import the nmap result
+        for host in hosts:
+            host.add_tag("nmap_{}".format(arguments.type))
+            host.save()
+
         import_nmap(result, "nmap_{}".format(arguments.type), check_function=all_hosts, import_services=True)
     else:
         print_notification("No hosts found")
@@ -215,18 +217,18 @@ def nmap_smb_vulnscan():
     services = service_search.get_services(ports=['445'], tags=['!smb_vulnscan'], up=True)
     service_dict = {}
     for service in services:
-        service_dict[service.address] = service
+        service_dict[str(service.address)] = service
 
-    nmap_args = "-Pn -n --disable_arp_ping --script smb-security-mode.nse,smb-vuln-ms17-010.nse -p 445"
+    nmap_args = "-Pn -n --disable_arp_ping --script smb-security-mode.nse,smb-vuln-ms17-010.nse -p 445".split(" ")
 
     if services:
-        result = nmap(nmap_args, [s.address for s in services])
+        result = nmap(nmap_args, [str(s.address) for s in services])
         parser = NmapParser()
         report = parser.parse_fromstring(result)
         for nmap_host in report.hosts:
             for script_result in nmap_host.scripts_results:
                 script_result = script_result.get('elements', {})
-                service = service_dict[nmap_host.address]
+                service = service_dict[str(nmap_host.address)]
                 service.add_tag('smb_vulnscan')
                 if script_result.get('message_signing', '') == 'disabled':
                     print_success("({}) SMB Signing disabled".format(nmap_host.address))
@@ -235,6 +237,7 @@ def nmap_smb_vulnscan():
                     print_success("({}) Vulnerable for MS17-010".format(nmap_host.address))
                     service.add_tag('MS17-010')
                 service.update(tags=service.tags)
+        print_notification("Done")
     else:
         print_notification("No services found to scan.")
 

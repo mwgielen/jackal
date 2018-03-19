@@ -170,6 +170,8 @@ def parse_domain_users(domain_users_file, domain_groups_file):
         user.name = result['name']
         user.domain.append(result['domain'])
         user.description = result['description']
+        user.groups.extend(result['groups'])
+        user.flags.extend(result['flags'])
         user.sid = result['sid']
         user.add_tag("domaindump")
         user.save()

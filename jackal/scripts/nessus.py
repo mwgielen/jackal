@@ -67,7 +67,7 @@ def main():
     core = HostSearch()
     hosts = core.get_hosts(tags=['!nessus'])
     hosts = [host for host in hosts]
-    host_ips = ",".join([host.address for host in hosts])
+    host_ips = ",".join([str(host.address) for host in hosts])
 
     url = config.get('nessus', 'host')
     access = config.get('nessus', 'access_key')

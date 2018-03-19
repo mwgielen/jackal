@@ -526,7 +526,7 @@ class DocMapper(object):
         lines = []
         for line in sys.stdin:
             try:
-                line.append(self.line_to_object(line.strip()))
+                lines.append(self.line_to_object(line.strip()))
             except ValueError:
                 pass
             except KeyError:
