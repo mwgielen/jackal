@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from elasticsearch_dsl import (Date, DocType, Integer, Ip,
-                               Keyword, Object, Text, Boolean)
+                               Keyword, Object, Text, Boolean, Object)
 from jackal.config import Config
 
 config = Config()
@@ -168,3 +168,19 @@ class User(JackalDoc):
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         self.meta.id = self.username
+
+class Log(DocType):
+    """
+        Log entry
+    """
+    timestamp = Date()
+    tool = Keyword()
+    description = Keyword()
+    stats = Object()
+
+    def save(self, **kwargs):
+        self.timestamp = datetime.now()
+        return super(Log, self).save(**kwargs)
+
+    class Meta:
+        index = "{}-log".format(config.get('jackal', 'index'))

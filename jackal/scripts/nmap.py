@@ -5,7 +5,7 @@ import subprocess
 import sys
 import datetime
 
-from jackal import Host, HostSearch, RangeSearch, Service, ServiceSearch
+from jackal import Host, HostSearch, RangeSearch, Service, ServiceSearch, Logger
 from jackal.config import Config
 from jackal.utils import print_error, print_notification, print_success
 from libnmap.parser import NmapParser, NmapParserException
@@ -23,7 +23,9 @@ def import_file():
         print_notification("Importing nmap file: {}".format(arg))
         try:
             with open(arg, 'r') as f:
-                import_nmap(f.read(), 'nmap_import', check_function=all_hosts, import_services=True)
+                stats = import_nmap(f.read(), 'nmap_import', check_function=all_hosts, import_services=True)
+            stats['file'] = arg
+            Logger().log('import_nmap', 'Imported nmap file', stats=stats)
         except NmapParserException:
             print_error("File could not be parsed: {}".format(arg))
         except FileNotFoundError:
@@ -38,10 +40,11 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
     service_search = ServiceSearch()
     parser = NmapParser()
     report = parser.parse_fromstring(result)
-    imports = 0
+    imported_hosts = 0
+    imported_services = 0
     for nmap_host in report.hosts:
         if check_function(nmap_host):
-            imports += 1
+            imported_hosts += 1
             host = host_search.id_to_object(nmap_host.address)
             host.status = nmap_host.status
             if nmap_host.os_fingerprinted:
@@ -50,6 +53,7 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
                 host.hostname.extend(nmap_host.hostnames)
             if import_services:
                 for service in nmap_host.services:
+                    imported_services += 1
                     serv = Service(**service.get_dict())
                     serv.address = nmap_host.address
                     service_id = service_search.object_to_id(serv)
@@ -73,10 +77,11 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
                     if service.state == 'filtered':
                         host.filtered_ports.append(service.port)
             host.save()
-    if imports:
-        print_success("Imported {} hosts".format(imports))
+    if imported_hosts:
+        print_success("Imported {} hosts, with tag {}".format(imported_hosts, tag))
     else:
         print_error("No hosts found")
+    return {'hosts': imported_hosts, 'services': imported_services}
 
 
 def include_hostnames(nmap_host):
@@ -157,6 +162,11 @@ def nmap_discover():
 
     print_notification("Running nmap with args: {} on {} range(s)".format(nmap_args, len(ips)))
     result = nmap(nmap_args, ips)
+    stats = import_nmap(result, tag, check_function)
+    stats['scanned_ranges'] = len(ips)
+
+    Logger().log('nmap_discover', "Nmap discover with args: {} on {} range(s)".format(nmap_args, len(ips)), stats)
+
     for r in ranges:
         r.add_tag(tag)
         r.save()
@@ -204,7 +214,11 @@ def nmap_scan():
             host.add_tag("nmap_{}".format(arguments.type))
             host.save()
 
-        import_nmap(result, "nmap_{}".format(arguments.type), check_function=all_hosts, import_services=True)
+        stats = import_nmap(result, "nmap_{}".format(arguments.type), check_function=all_hosts, import_services=True)
+        stats['scanned_hosts'] = len(hosts)
+        stats['type'] = arguments.type
+
+        Logger().log('nmap_scan', "Performed nmap {} scan on {} hosts".format(arguments.type, len(hosts)), stats)
     else:
         print_notification("No hosts found")
 
@@ -225,6 +239,8 @@ def nmap_smb_vulnscan():
         result = nmap(nmap_args, [str(s.address) for s in services])
         parser = NmapParser()
         report = parser.parse_fromstring(result)
+        smb_signing = 0
+        ms17 = 0
         for nmap_host in report.hosts:
             for script_result in nmap_host.scripts_results:
                 script_result = script_result.get('elements', {})
@@ -233,11 +249,17 @@ def nmap_smb_vulnscan():
                 if script_result.get('message_signing', '') == 'disabled':
                     print_success("({}) SMB Signing disabled".format(nmap_host.address))
                     service.add_tag('smb_signing_disabled')
+                    smb_signing += 1
                 if script_result.get('CVE-2017-0143', {}).get('state', '') == 'VULNERABLE':
                     print_success("({}) Vulnerable for MS17-010".format(nmap_host.address))
                     service.add_tag('MS17-010')
+                    ms17 += 1
                 service.update(tags=service.tags)
+
         print_notification("Done")
+        stats = {'smb_signing': smb_signing, 'MS17_010': ms17, 'scanned_services': len(services)}
+
+        Logger().log('smb_vulnscan', 'Scanned {} smb services for vulnerabilities'.format(len(services)), stats)
     else:
         print_notification("No services found to scan.")
 

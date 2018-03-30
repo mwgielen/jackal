@@ -5,7 +5,7 @@ from elasticsearch import ConnectionError, TransportError
 from elasticsearch_dsl.connections import connections
 from jackal.core import HostSearch, RangeSearch, ServiceSearch, UserSearch, CredentialSearch, config
 from jackal.utils import print_error, print_notification
-from jackal.documents import Host, Range, Service, User, Credential
+from jackal.documents import Host, Range, Service, User, Credential, Log
 
 
 def main():
@@ -40,6 +40,7 @@ def initialize_indices():
     Service.init()
     User.init()
     Credential.init()
+    Log.init()
 
 
 if __name__ == '__main__':

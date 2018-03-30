@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
-from jackal import Host, RangeSearch
+from jackal import Host, RangeSearch, Logger
 from jackal.utils import print_line
 
 
@@ -21,6 +21,7 @@ class NetDiscover(object):
             if len(line) == 5:
                 self.ips.append(line[0])
         print_line("Found {} systems".format(len(self.ips)))
+        return len(self.ips)
 
 
     def save(self):
@@ -46,8 +47,10 @@ def main():
 
     for r in ranges:
         discover = NetDiscover(r)
-        discover.execute()
+        results = discover.execute()
         discover.save()
+
+    Logger().log('netdiscover', "Netdiscover on {} ranges".format(len(ranges)), stats={'scanned_ranges': len(ranges), 'hosts': results})
 
 
 if __name__ == '__main__':

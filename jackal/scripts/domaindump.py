@@ -4,7 +4,7 @@ import json
 import sys
 
 import dns.resolver
-from jackal import HostSearch, UserSearch
+from jackal import HostSearch, UserSearch, Logger
 from jackal.documents import User
 from jackal.utils import print_notification, print_success
 
@@ -194,20 +194,27 @@ def import_domaindump():
     arguments = parser.parse_args()
     domain_users_file = ''
     domain_groups_file = ''
+    computer_count = 0
+    user_count = 0
+    stats = {}
     for filename in arguments.files:
         if filename.endswith('domain_computers.json'):
             print_notification('Parsing domain computers')
-            count = parse_domain_computers(filename)
-            if count:
-                print_success("{} systems imported".format(count))
+            computer_count = parse_domain_computers(filename)
+            if computer_count:
+                stats['hosts'] = computer_count
+                print_success("{} hosts imported".format(computer_count))
         elif filename.endswith('domain_users.json'):
             domain_users_file = filename
         elif filename.endswith('domain_groups.json'):
             domain_groups_file = filename
     if domain_users_file:
         print_notification("Parsing domain users")
-        count = parse_domain_users(domain_users_file, domain_groups_file)
-        print_success("{} users imported".format(count))
+        user_count = parse_domain_users(domain_users_file, domain_groups_file)
+        if user_count:
+            print_success("{} users imported".format(user_count))
+            stats['users'] = user_count
+    Logger().log("import_domaindump", 'Imported domaindump, found {} user, {} systems'.format(user_count, computer_count), stats)
 
 
 if __name__ == '__main__':

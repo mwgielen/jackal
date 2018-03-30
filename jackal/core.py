@@ -8,7 +8,7 @@ import urllib3
 from elasticsearch import NotFoundError, ConnectionError, TransportError
 from elasticsearch_dsl.connections import connections
 from jackal.config import Config
-from jackal.documents import Host, Range, Service, User, Credential, JackalDoc
+from jackal.documents import Host, Range, Service, User, Credential, JackalDoc, Log
 from jackal.utils import print_error
 
 # Disable warnings for now.
@@ -498,6 +498,24 @@ class CredentialSearch(CoreSearch):
         core_parser.add_argument('--cracked', help="Only include hashes / passwords that were cracked", action="store_true")
         core_parser.add_argument('-r', '--range', type=str, help="Range/IP to find results")
         return core_parser
+
+
+class Logger(CoreSearch):
+    """
+    """
+    def __init__(self, *args, **kwargs):
+        super(Logger, self).__init__(*args, **kwargs)
+        self.object_type = Log
+        self.use_pipe = False
+
+
+    def log(self, tool='', description='', stats={}):
+        entry = Log(tool=tool, description=description, stats=stats)
+        entry.save()
+
+
+    def create_search(self, *args, **kwargs):
+        return Log.search()
 
 
 class DocMapper(object):

@@ -1,6 +1,6 @@
 import json
 import datetime
-from jackal import HostSearch
+from jackal import HostSearch, Logger
 from jackal.config import Config
 import requests
 
@@ -83,6 +83,7 @@ def main():
         host.add_tag('nessus')
         host.save()
 
+    Logger().log("nessus", "Nessus scan started on {} hosts".format(len(hosts)), {'scanned_hosts': len(hosts)})
 
 if __name__ == '__main__':
     main()

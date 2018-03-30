@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import base64
 import sys
-import grequests
+
 import gevent
-from jackal import ServiceSearch, Credential
-from jackal.utils import print_success, print_notification, print_error
+import grequests
+from jackal import Credential, Logger, ServiceSearch
+from jackal.utils import print_error, print_notification, print_success
 
 
 def brutefore_passwords(ip, url, credentials, service):
@@ -58,6 +59,8 @@ def main():
         service.update(tags=service.tags)
 
     gevent.wait()
+    # TODO fix stats
+    Logger().log("tomcat_brute", "Performed tomcat bruteforce scan", {'scanned_services': len(services)})
 
 
 if __name__ == '__main__':
