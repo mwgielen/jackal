@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='jackal',
-      version='0.6.4',
+      version='0.6.5',
       description='Jackal provides a way to store results from hacking tools in a single place.',
       author='Matthijs Gielen',
       author_email='github@mwgielen.com',
@@ -15,6 +15,7 @@ setup(name='jackal',
       url='https://github.com/mwgielen/jackal/',
       packages=['jackal', 'jackal.scripts'],
       install_requires=['elasticsearch_dsl', 'python-libnmap', 'gevent', 'grequests', 'requests', 'dnspython'],
+      zip_safe=False,
       entry_points={
           'console_scripts': [
               'jk-status = jackal.scripts.status:main',
@@ -44,5 +45,6 @@ setup(name='jackal',
               'jk-creds = jackal.scripts.credentials:main',
               'jk-creds-overview = jackal.scripts.credentials:overview',
               'jk-modify = jackal.scripts.modify:modify_input',
+              'jk-import-cme = jackal.scripts.cme:main',
           ]
       })

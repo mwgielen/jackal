@@ -137,7 +137,7 @@ class Credential(JackalDoc):
     domain = Keyword()
     type = Keyword(required=True)
     access_level = Keyword()
-    service_id = Keyword()
+    port = Integer()
     host_ip = Ip()
     description = Keyword()
 
