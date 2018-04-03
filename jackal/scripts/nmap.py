@@ -5,11 +5,10 @@ import subprocess
 import sys
 import datetime
 
-from jackal import Host, HostSearch, RangeSearch, Service, ServiceSearch, Logger
+from jackal import HostSearch, RangeSearch, Service, ServiceSearch, Logger
 from jackal.config import Config
 from jackal.utils import print_error, print_notification, print_success
 from libnmap.parser import NmapParser, NmapParserException
-from libnmap.process import NmapProcess
 
 
 def all_hosts(*args, **kwargs):
@@ -233,7 +232,7 @@ def nmap_smb_vulnscan():
     for service in services:
         service_dict[str(service.address)] = service
 
-    nmap_args = "-Pn -n --disable_arp_ping --script smb-security-mode.nse,smb-vuln-ms17-010.nse -p 445".split(" ")
+    nmap_args = "-Pn -n --disable-arp-ping --script smb-security-mode.nse,smb-vuln-ms17-010.nse -p 445".split(" ")
 
     if services:
         result = nmap(nmap_args, [str(s.address) for s in services])

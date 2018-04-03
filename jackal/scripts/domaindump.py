@@ -2,6 +2,7 @@
 import argparse
 import json
 import sys
+import ipaddress
 
 import dns.resolver
 from jackal import HostSearch, UserSearch, Logger
@@ -50,7 +51,10 @@ def parse_single_computer(entry):
     """
     computer = Computer(dns_hostname=get_field(entry, 'dNSHostName'), description=get_field(
         entry, 'description'), os=get_field(entry, 'operatingSystem'), group_id=get_field(entry, 'primaryGroupID'))
-    ip = get_field(entry, 'IPv4')
+    try:
+        ip = str(ipaddress.ip_address(get_field(entry, 'IPv4')))
+    except ValueError:
+        pass
     if ip:
         computer.ip = ip
     elif computer.dns_hostname:
