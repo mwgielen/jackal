@@ -169,7 +169,6 @@ def nmap_discover():
     for r in ranges:
         r.add_tag(tag)
         r.save()
-    import_nmap(result, tag, check_function)
 
 
 def nmap_scan():
@@ -198,6 +197,7 @@ def nmap_scan():
     tags = ["!nmap_" + tag  for tag in tags]
 
     hosts = hs.get_hosts(tags=tags)
+    hosts = [host for host in hosts]
 
     # Create the nmap arguments
     nmap_args = []
@@ -212,7 +212,7 @@ def nmap_scan():
         for host in hosts:
             host.add_tag("nmap_{}".format(arguments.type))
             host.save()
-
+        print_notification("Nmap done, importing results")
         stats = import_nmap(result, "nmap_{}".format(arguments.type), check_function=all_hosts, import_services=True)
         stats['scanned_hosts'] = len(hosts)
         stats['type'] = arguments.type
@@ -228,6 +228,7 @@ def nmap_smb_vulnscan():
     """
     service_search = ServiceSearch()
     services = service_search.get_services(ports=['445'], tags=['!smb_vulnscan'], up=True)
+    services = [service for service in services]
     service_dict = {}
     for service in services:
         service_dict[str(service.address)] = service

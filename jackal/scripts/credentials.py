@@ -13,7 +13,7 @@ def main():
     arguments = arg.parse_args()
 
     if arguments.count:
-        print_line("Number of hosts: {}".format(cred_search.argument_count()))
+        print_line("Number of credentials: {}".format(cred_search.argument_count()))
     else:
         response = cred_search.get_credentials()
         for hit in response:

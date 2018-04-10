@@ -167,6 +167,8 @@ class RangeSearch(CoreSearch):
                 search = search.exclude("term", tags=tag[1:])
             else:
                 search = search.filter("term", tags=tag)
+
+        # TODO implement range filter.
         return search
 
     def get_ranges(self, *args, **kwargs):

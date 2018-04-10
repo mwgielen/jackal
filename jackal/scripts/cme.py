@@ -10,7 +10,7 @@ def import_other(database_path):
     print_notification("Not yet implemented")
 
 
-def add_credential(username, secret, domain, host_ip, cred_type, port, access_level=None):
+def add_credential(username, secret, domain, host_ip, cred_type, port, access_level=None, tag='cme_import'):
     credential_search = CredentialSearch(use_pipe=False)
     credential = credential_search.find_object(username=username, secret=secret, domain=domain, host_ip=host_ip)
     if not credential:
@@ -25,7 +25,7 @@ def add_credential(username, secret, domain, host_ip, cred_type, port, access_le
     if access_level:
         credential.access_level = access_level
 
-    credential.add_tag('cme_import')
+    credential.add_tag(tag)
     credential.save()
 
 
