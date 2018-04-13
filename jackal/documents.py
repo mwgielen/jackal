@@ -73,7 +73,8 @@ class Range(JackalDoc):
 
     def __init__(self, **kwargs):
         super(Range, self).__init__(**kwargs)
-        self.meta.id = self.range
+        if self.range:
+            self.meta.id = self.range
 
 
 class Service(JackalDoc):
@@ -123,7 +124,8 @@ class Host(JackalDoc):
 
     def __init__(self, ** kwargs):
         super(Host, self).__init__(**kwargs)
-        self.meta.id = self.address
+        if self.address:
+            self.meta.id = self.address
 
 
 class Credential(JackalDoc):
@@ -167,7 +169,8 @@ class User(JackalDoc):
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
-        self.meta.id = self.username
+        if self.username:
+            self.meta.id = self.username
 
 class Log(DocType):
     """

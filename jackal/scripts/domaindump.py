@@ -54,7 +54,8 @@ def parse_single_computer(entry):
     try:
         ip = str(ipaddress.ip_address(get_field(entry, 'IPv4')))
     except ValueError:
-        pass
+        ip = ''
+
     if ip:
         computer.ip = ip
     elif computer.dns_hostname:
