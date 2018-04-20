@@ -216,7 +216,7 @@ class HostSearch(CoreSearch):
         self.object_type = Host
 
 
-    def create_search(self, tags=[], up=False, ports=[], search=[], *args, **kwargs):
+    def create_search(self, tags=[], up=False, ports=[], search=[], domain='', *args, **kwargs):
         s = Host.search()
         for tag in tags:
             if tag[0] == '!':
@@ -231,6 +231,9 @@ class HostSearch(CoreSearch):
             s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
         if kwargs.get('range'):
             s = s.filter('term', address=kwargs.get('range'))
+        if domain:
+            s = s.query('query_string', query="hostname: *.{}".format(domain), analyze_wildcard=True)
+
         return s
 
     def id_to_object(self, line):
@@ -253,7 +256,7 @@ class HostSearch(CoreSearch):
         arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe and self.use_pipe:
             return self.get_pipe(Host)
-        elif arguments.range or arguments.tags or arguments.search or arguments.ports or arguments.up:
+        elif arguments.range or arguments.tags or arguments.search or arguments.ports or arguments.up or arguments.domain:
             return self.argument_search()
         else:
             return self.search(*args, **kwargs)
@@ -268,6 +271,7 @@ class HostSearch(CoreSearch):
         core_parser.add_argument('-p', '--ports', type=str, help="Ports to include", nargs="+", default=[])
         core_parser.add_argument('-u', '--up', help="Only include hosts that are up", action="store_true")
         core_parser.add_argument('-r', '--range', type=str, help="The CIDR range to include hosts from")
+        core_parser.add_argument('-d', '--domain', type=str, help="The domain to filter on")
         return core_parser
 
 
@@ -367,7 +371,7 @@ class UserSearch(CoreSearch):
         self.object_type = User
 
 
-    def create_search(self, group='', tags=[], search=[], *args, **kwargs):
+    def create_search(self, group='', tags=[], search=[], domain='', *args, **kwargs):
         """
         """
         user_search = User.search()
@@ -378,6 +382,8 @@ class UserSearch(CoreSearch):
                 user_search = user_search.filter("term", tags=tag)
         if group:
             user_search = user_search.filter("term", groups=group)
+        if domain:
+            user_search = user_search.filter("term", domain=domain)
         for search_argument in search:
             user_search = user_search.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
         return user_search
@@ -410,7 +416,7 @@ class UserSearch(CoreSearch):
         arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe and self.use_pipe:
             return self.get_pipe(self.object_type)
-        elif arguments.tags or arguments.group or arguments.search:
+        elif arguments.tags or arguments.group or arguments.search or arguments.domain:
             return self.argument_search()
         else:
             return self.search(*args, **kwargs)
@@ -420,6 +426,7 @@ class UserSearch(CoreSearch):
         core_parser = self.core_parser
         core_parser.add_argument('-s', '--search', type=str, help="Search string to use", nargs='+', default=[])
         core_parser.add_argument('-g', '--group', type=str, help="Group to include", default='')
+        core_parser.add_argument('-d', '--domain', type=str, help="Domain to include", default='')
         return core_parser
 
 
@@ -436,7 +443,7 @@ class CredentialSearch(CoreSearch):
         self.object_type = Credential
 
 
-    def create_search(self, group='', tags=[], search=[], password='', cracked=False, type='', *args, **kwargs):
+    def create_search(self, group='', tags=[], search=[], password='', cracked=False, type='', domain='', *args, **kwargs):
         """
         """
         # print(password)
@@ -456,6 +463,8 @@ class CredentialSearch(CoreSearch):
             s = s.filter("term", cracked=True)
         if kwargs.get('range', ''):
             s = s.filter("term", host_ip=kwargs.get('range'))
+        if domain:
+            s = s.filter("term", domain=domain)
         for search_argument in search:
             s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
         return s
@@ -531,7 +540,7 @@ class CredentialSearch(CoreSearch):
         arguments, _ = self.argparser.parse_known_args()
         if self.is_pipe and self.use_pipe:
             return self.get_pipe(self.object_type)
-        elif arguments.tags or arguments.type or arguments.search or arguments.password or arguments.cracked or arguments.range:
+        elif arguments.tags or arguments.type or arguments.search or arguments.password or arguments.cracked or arguments.range or arguments.domain:
             return self.argument_search()
         else:
             return self.search(*args, **kwargs)
@@ -544,6 +553,7 @@ class CredentialSearch(CoreSearch):
         core_parser.add_argument('-p', '--password', type=str, help="Password to search for")
         core_parser.add_argument('--cracked', help="Only include hashes / passwords that were cracked", action="store_true")
         core_parser.add_argument('-r', '--range', type=str, help="Range/IP to find results")
+        core_parser.add_argument('-d', '--domain', type=str, help="Domain to include")
         return core_parser
 
 
