@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import argparse
 import sys
-from jackal.utils import print_line, print_error, PartialFormatter
-from jackal.core import DocMapper, Range, Host, Service, User
 
+from jackal.core import DocMapper, Host, Range, Service, User
+from jackal.utils import PartialFormatter, print_error, print_line
 
 fmt = PartialFormatter(missing='')
 
@@ -16,11 +17,11 @@ def format_input(style):
 
 
 def filter():
-    if len(sys.argv) > 1:
-        style = '{' + str(sys.argv[1]) + '}'
-        format_input(style)
-    else:
-        print_error("Please provide an argument.")
+    argparser = argparse.ArgumentParser(description='Filters a single key from a json object, pipe json objects to this to filter.')
+    argparser.add_argument('filter', metavar='filter', help='The value to filter on, for example address')
+    arguments = argparser.parse_args()
+    style = '{' + arguments.filter + '}'
+    format_input(style)
 
 
 def format():
@@ -28,12 +29,15 @@ def format():
         Formats the output of another tool in the given way.
         Has default styles for ranges, hosts and services.
     """
+    argparser = argparse.ArgumentParser(description='Formats a json object in a certain way. Use with pipes.')
+    argparser.add_argument('format', metavar='format', help='How to format the json for example "{address}:{port}".', nargs='?')
+    arguments = argparser.parse_args()
     service_style = "{address:15} {port:7} {protocol:5} {service:15} {state:10} {banner} {tags}"
     host_style = "{address:15} {tags}"
     ranges_style = "{range:18} {tags}"
     users_style = "{username}"
-    if len(sys.argv) > 1:
-        format_input(sys.argv[1])
+    if arguments.format:
+        format_input(arguments.format)
     else:
         doc_mapper = DocMapper()
         if doc_mapper.is_pipe:
