@@ -106,7 +106,7 @@ def nmap(nmap_args, ips):
         Start an nmap process with the given args on the given ips.
     """
     config = Config()
-    arguments = ['/usr/bin/sudo', 'nmap']
+    arguments = ['nmap']
     arguments.extend(ips)
     arguments.extend(nmap_args)
     output_file = ''
