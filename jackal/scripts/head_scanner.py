@@ -1,36 +1,45 @@
 #!/usr/bin/env python3
-import grequests
+import requests
 import urllib3
 from gevent.pool import Pool
+from gevent import monkey
 from jackal import Credential, Logger, ServiceSearch
 from jackal.utils import print_error, print_notification, print_success
 
+
+monkey.patch_socket()
 
 def check_service(service):
     """
         Connect to a service to see if it is a http or https server.
     """
     # Try HTTP
-    result = grequests.map([grequests.head('http://{}:{}'.format(service.address, service.port), timeout=1)])[0]
     service.add_tag('header_scan')
-    if result:
+    http = False
+    try:
+        result = requests.head('http://{}:{}'.format(service.address, service.port), timeout=1)
         print_success("Found http service on {}:{}".format(service.address, service.port))
         service.add_tag('http')
+        http = True
         try:
             service.banner = result.headers['Server']
         except KeyError:
             pass
-    else:
+    except requests.exceptions.ConnectTimeout:
+        pass
+
+    if not http:
         # Try HTTPS
-        result = grequests.map([grequests.head('https://{}:{}'.format(service.address, service.port), verify=False, timeout=3)])[0]
-        if result:
+        try:
+            result = requests.head('https://{}:{}'.format(service.address, service.port), verify=False, timeout=3)
             service.add_tag('https')
             print_success("Found https service on {}:{}".format(service.address, service.port))
             try:
                 service.banner = result.headers['Server']
             except KeyError:
                 pass
-
+        except requests.exceptions.ConnectTimeout:
+            pass
     service.save()
 
 def main():
