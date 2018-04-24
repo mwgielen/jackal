@@ -5,16 +5,22 @@ Script to list all of the ranges
 import argparse
 
 from jackal import HostSearch, Host
-from jackal.utils import print_json, print_line
+from jackal.utils import print_json, print_line, print_notification, print_success
 
 
 def main():
     hs = HostSearch()
     arg = argparse.ArgumentParser(parents=[hs.argparser], conflict_handler='resolve')
     arg.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
+    arg.add_argument('-a', '--add', help="Add a new range", action="store_true")
     arguments = arg.parse_args()
-
-    if arguments.count:
+    if arguments.add:
+        print_notification("Adding new host")
+        address = input("What host do you want to add? ")
+        host = hs.id_to_object(address)
+        print_success("Added a new host:")
+        print_json(host.to_dict(include_meta=True))
+    elif arguments.count:
         print_line("Number of hosts: {}".format(hs.argument_count()))
     else:
         response = hs.get_hosts()

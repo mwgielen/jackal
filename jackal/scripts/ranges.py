@@ -4,16 +4,23 @@ Script to list all of the ranges
 """
 import argparse
 
-from jackal import RangeSearch, Host
-from jackal.utils import print_json, print_line, print_error
+from jackal import RangeSearch, Host, Range
+from jackal.utils import print_json, print_line, print_error, print_notification, print_success
 
 
 def main():
     rs = RangeSearch()
     arg = argparse.ArgumentParser(parents=[rs.argparser], conflict_handler='resolve')
     arg.add_argument('-c', '--count', help="Only show the number of results", action="store_true")
+    arg.add_argument('-a', '--add', help="Add a new range", action="store_true")
     arguments = arg.parse_args()
-    if arguments.count:
+    if arguments.add:
+        print_notification("Adding new range")
+        range_str = input("What range do you want to add? ")
+        r = rs.id_to_object(range_str)
+        print_success("Added a new range:")
+        print_json(r.to_dict(include_meta=True))
+    elif arguments.count:
         print_line("Number of ranges: {}".format(rs.argument_count()))
     else:
         response = rs.get_ranges()
