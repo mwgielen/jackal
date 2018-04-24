@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import requests
 import urllib3
+from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
 from gevent.pool import Pool
 from gevent import monkey
 from jackal import Credential, Logger, ServiceSearch
 from jackal.utils import print_error, print_notification, print_success
-
+from OpenSSL.SSL import Error
 
 monkey.patch_socket()
 
@@ -25,7 +26,7 @@ def check_service(service):
             service.banner = result.headers['Server']
         except KeyError:
             pass
-    except requests.exceptions.ConnectTimeout:
+    except (ConnectionError, ConnectTimeout, ReadTimeout, Error):
         pass
 
     if not http:
@@ -38,7 +39,7 @@ def check_service(service):
                 service.banner = result.headers['Server']
             except KeyError:
                 pass
-        except requests.exceptions.ConnectTimeout:
+        except (ConnectionError, ConnectTimeout, ReadTimeout, Error):
             pass
     service.save()
 
