@@ -179,10 +179,14 @@ class Config(object):
 
     def __init__(self):
         self.config = configparser.ConfigParser()
-        if os.path.exists(self.config_file):
-            self.config.read(self.config_file)
-        else:
+        if not os.path.exists(self.config_file):
+            if not os.path.exists(self.config_dir):
+                os.makedirs(self.config_dir)
             self.config.read_dict(self.defaults)
+            with open(self.config_file, 'w') as configfile:
+                self.config.write(configfile)
+
+        self.config.read(self.config_file)
 
     def set(self, section, key, value):
         """
