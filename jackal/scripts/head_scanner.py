@@ -63,6 +63,7 @@ def main():
         pool.spawn(check_service, service)
 
     pool.join()
+    print_notification("Completed, 'http' tag added to services that respond to http, 'https' tag added to services that respond to https.")
 
 
 if __name__ == '__main__':

@@ -258,7 +258,7 @@ def nmap_smb_vulnscan():
                     ms17 += 1
                 service.update(tags=service.tags)
 
-        print_notification("Done")
+        print_notification("Completed, 'smb_signing_disabled' tag added to systems with smb signing disabled, 'MS17-010' tag added to systems that did not apply MS17-010.")
         stats = {'smb_signing': smb_signing, 'MS17_010': ms17, 'scanned_services': len(services)}
 
         Logger().log('smb_vulnscan', 'Scanned {} smb services for vulnerabilities'.format(len(services)), stats)
