@@ -233,6 +233,7 @@ def nmap_smb_vulnscan():
     services = [service for service in services]
     service_dict = {}
     for service in services:
+        service.add_tag('smb_vulnscan')
         service_dict[str(service.address)] = service
 
     nmap_args = "-Pn -n --disable-arp-ping --script smb-security-mode.nse,smb-vuln-ms17-010.nse -p 445".split(" ")
@@ -247,7 +248,6 @@ def nmap_smb_vulnscan():
             for script_result in nmap_host.scripts_results:
                 script_result = script_result.get('elements', {})
                 service = service_dict[str(nmap_host.address)]
-                service.add_tag('smb_vulnscan')
                 if script_result.get('message_signing', '') == 'disabled':
                     print_success("({}) SMB Signing disabled".format(nmap_host.address))
                     service.add_tag('smb_signing_disabled')
