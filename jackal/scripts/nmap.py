@@ -46,6 +46,7 @@ def import_nmap(result, tag, check_function=all_hosts, import_services=False):
             imported_hosts += 1
             host = host_search.id_to_object(nmap_host.address)
             host.status = nmap_host.status
+            host.add_tag(tag)
             if nmap_host.os_fingerprinted:
                 host.os = nmap_host.os_fingerprint
             if nmap_host.hostnames:
