@@ -37,6 +37,7 @@ class NetDiscover(object):
                 host = Host(address=ip, tags=['netdiscover'])
                 host.save()
 
+
 def main():
     ranges = RangeSearch()
     arguments = ranges.argparser.parse_args()
@@ -45,9 +46,10 @@ def main():
     else:
         ranges = ranges.search(tags=['!netdiscover'])
 
+    results = 0
     for r in ranges:
         discover = NetDiscover(r)
-        results = discover.execute()
+        results += discover.execute()
         discover.save()
 
     Logger().log('netdiscover', "Netdiscover on {} ranges".format(len(ranges)), stats={'scanned_ranges': len(ranges), 'hosts': results})

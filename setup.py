@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='jackal',
-      version='0.6.9',
+      version='0.7.0',
       description='Jackal provides a way to store results from hacking tools in a single place.',
       author='Matthijs Gielen',
       author_email='github@mwgielen.com',
@@ -14,7 +14,7 @@ setup(name='jackal',
       requires_python='>=3',
       url='https://github.com/mwgielen/jackal/',
       packages=['jackal', 'jackal.scripts'],
-      install_requires=['elasticsearch_dsl', 'python-libnmap', 'gevent', 'grequests', 'requests', 'dnspython', 'psutil'],
+      install_requires=['elasticsearch_dsl', 'python-libnmap', 'gevent', 'grequests', 'requests', 'dnspython', 'psutil', 'pyinotify'],
       zip_safe=False,
       entry_points={
           'console_scripts': [
