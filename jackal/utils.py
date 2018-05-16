@@ -7,6 +7,7 @@ import sys
 import string
 import curses
 from math import ceil
+import signal
 
 
 def datetime_handler(x):
@@ -16,11 +17,14 @@ def datetime_handler(x):
 
 
 def print_line(text):
-    import signal
-    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     """
         Print the given line to stdout
     """
+    try:
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    except ValueError:
+        pass
+
     try:
         sys.stdout.write(text)
         if not text.endswith('\n'):
