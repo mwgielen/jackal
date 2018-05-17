@@ -110,6 +110,7 @@ class Spoofing(object):
                 host = event.name.replace('_samhashes.sam', '')
                 # TODO import file.
                 print_success("Secretsdump file, host ip: {}".format(host))
+                subprocess.Popen(['jk-import-secretsdump', event.pathname])
 
                 # Remove this system from this ip list.
                 self.ips.remove(host)

@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='jackal',
-      version='0.7.0',
+      version='0.7.1',
       description='Jackal provides a way to store results from hacking tools in a single place.',
       author='Matthijs Gielen',
       author_email='github@mwgielen.com',
@@ -49,5 +49,6 @@ setup(name='jackal',
               'jk-http-header-scan = jackal.scripts.head_scanner:main',
               'jk-exploit-eternalblue = jackal.scripts.eternalblue:main',
               'jk-exploit-relay = jackal.scripts.relaying:main',
+              'jk-import-secretsdump = jackal.scripts.secretsdump:import_secretsdump',
           ]
       })
