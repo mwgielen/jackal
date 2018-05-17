@@ -63,6 +63,7 @@ The next table displays what kind of in and output the tools have. IN means the 
 | Tool                   | Ranges          | Hosts   | Services   | Users   | Credentials   |
 | ---------------------- | :-------------: | :-----: | :--------: | :-----: | :-----------: |
 | jk-sniffer             | OUT             | OUT     |            |         |               |
+| jk-dns-discover        | OUT             | OUT     |            |         |               |
 | jk-netdiscover         | IN              | OUT     |            |         |               |
 | jk-nmap-discover       | IN              | OUT     |            |         |               |
 | jk-nmap                |                 | IN      | OUT        |         |               |
