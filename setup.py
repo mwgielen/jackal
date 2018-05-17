@@ -50,5 +50,6 @@ setup(name='jackal',
               'jk-exploit-eternalblue = jackal.scripts.eternalblue:main',
               'jk-exploit-relay = jackal.scripts.relaying:main',
               'jk-import-secretsdump = jackal.scripts.secretsdump:import_secretsdump',
+              'jk-nmap-smb-os = jackal.scripts.nmap:os_discovery',
           ]
       })
