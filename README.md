@@ -15,9 +15,19 @@ Jackal tries to simplify this process by storing everything on a central place b
 
 
 ## Dependencies and installation
-Jackal only works on Python 3.
-Jackal requires [python-libnmap](https://github.com/savon-noir/python-libnmap) and [elasticsearch_dsl](https://github.com/elastic/elasticsearch-dsl-py) to function. Also an [elasticsearch](https://www.elastic.co/) instance is required. Some of the included tools require some other install tools on your system, for example jk-netdiscover requires netdiscover.
+Jackal only works on Python 3. An [elasticsearch](https://www.elastic.co/) instance is required, can be installed locally or remote. Checkout the options of jk-configure to secure your setup.
 
+The next tools are used in jackal:
+
+
+| Program       | Description                                                         | Where to get                                                                   |
+| ------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| nmap          | To scan hosts and discover vulnerabilities                          | [link](https://nmap.org/book/install.html)                                     |
+| netdiscover   | To discover hosts in the network                                    | apt-get install netdiscover                                                    |
+| msfvenom      | Generate payloads                                                   | [link](https://github.com/rapid7/metasploit-framework/wiki/Nightly-Installers) |
+| ntlmrelayx.py | Used to relay connections together with responder.                  | [link](https://github.com/CoreSecurity/impacket)                               |
+| responder     | Used to spoof nbns and llmnr.                                       | [link](https://github.com/SpiderLabs/Responder)                                |
+| git           | To download exploits from git.                                      | apt-get install git                                                            |
 
 This package can be installed with `pip3 install jackal` or the latest version can be installed with `python3 setup.py install`.
 
@@ -38,11 +48,35 @@ Jackal provides tools to interact with the database. The stand alone tools that 
 Jackal also provides ways to import output from other tools:
 - jk-import-nmap, to import a finished [nmap](https://nmap.org/) scan into jackal
 - jk-import-domaindump, to import the output of [ldapdomaindump](https://github.com/dirkjanm/ldapdomaindump).
+- jk-import-cme, to import the output of [crackmapexec](https://github.com/byt3bl33d3r/CrackMapExec)
+- jk-import-secretsdump, to import secretsdump output.
 
 Futhermore there are tools to interact with some commonly used tools to map the network:
 - jk-nmap-discover, to perform a ping or reverse lookup scan on the ranges in elasticsearch.
 - jk-nmap, to perform nmap scans on hosts in elasticsearch.
 - jk-netdiscover, this will retrieve and scan ranges from elastic. Any discovered hosts are stored in elastic.
+
+### In and outputs.
+
+The next table displays what kind of in and output the tools have. IN means the tool requires some entries of that type. OUT shows what kind of systems the tool outputs. Thus jk-nmap-discover requires some defined ranges, and will output the hosts found in these ranges.
+
+| Tool                   | Ranges          | Hosts   | Services   | Users   | Credentials   |
+| ---------------------- | :-------------: | :-----: | :--------: | :-----: | :-----------: |
+| jk-sniffer             | OUT             | OUT     |            |         |               |
+| jk-netdiscover         | IN              | OUT     |            |         |               |
+| jk-nmap-discover       | IN              | OUT     |            |         |               |
+| jk-nmap                |                 | IN      | OUT        |         |               |
+| jk-import-nmap         |                 | OUT     | OUT        |         |               |
+| jk-import-domaindump   |                 | OUT     |            | OUT     |               |
+| jk-nessus              |                 | IN      |            |         |               |
+| jk-nmap-smb-vulnscan   |                 |         | IN         |         |               |
+| jk-import-cme          |                 | OUT     |            | OUT     | OUT           |
+| jk-http-header-scan    |                 |         | IN         |         |               |
+| jk-exploit-eternalblue |                 |         | IN         |         |               |
+| jk-exploit-relay       |                 | OUT     | IN         | OUT     | OUT           |
+| jk-import-secretsdump  |                 |         |            | OUT     | OUT           |
+| jk-nmap-smb-os         |                 |         | IN         |         |               |
+
 
 ### Examples
 
@@ -82,14 +116,6 @@ jk-hosts | jk-format {address} # Is the same as jk-filter address
 jk-services -S http | jk-format '{service}://{address}:{port}'
 ```
 
-Jackal has some wrappers around commonly used tools to find hosts and services on the network these include:
-```
-jk-netdiscover
-jk-nmap-discover
-jk-nmap
-jk-sniffer
-```
-These tools will include the tag in the found hosts and ranges to indicate which tool found it.
 
 ### Named pipes
 Jackal has a build in named pipe server, this server can be used to give access to the data of jackal in other tools.
@@ -112,14 +138,14 @@ Now the pipes can be used in other programs, for example cat or in msfconsole by
     set RHOSTS file:/path/to/pipes/dir/smb
 ```
 
-Metasploit will then access the file to get the hosts from the file.
+Metasploit will then access the file to get the hosts from elasticsearch.
 
 
 ## Building your own tools
 Jackal provides a multiple classes to interact with the elasticsearch instance. If you want to include jackal in your own tool it's as simple as importing one of these classes.
 All of these classes share the Core class. This means that these classes share most of the functionality.
 ```
-from jackall import RangeSearch, HostSearch, ServiceSearch
+from jackal import RangeSearch, HostSearch, ServiceSearch
 from jackal.utils import print_json
 
 ranges = RangeSearch()
@@ -140,5 +166,5 @@ for s in services.search(ports=['445']):
     print_json(s.to_dict())
 ```
 
-These core classes provides functionality to obtain the ranges, hosts and service from elasticsearch. Also it provides functionality to obtain hosts and ranges from pipes and to parse commonly used parameters.
+These core classes provides functionality to obtain the ranges, hosts and services from elasticsearch. Also it provides functionality to obtain hosts and ranges from pipes and to parse commonly used parameters.
 The scripts folder contain some examples that provide some insight on how to use these classes.
