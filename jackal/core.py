@@ -443,7 +443,7 @@ class CredentialSearch(CoreSearch):
         self.object_type = Credential
 
 
-    def create_search(self, group='', tags=[], search=[], password='', cracked=False, type='', domain='', *args, **kwargs):
+    def create_search(self, group='', tags=[], search=[], password='', cracked=False, type='', domain='', port=None, *args, **kwargs):
         """
         """
         # print(password)
@@ -467,6 +467,8 @@ class CredentialSearch(CoreSearch):
             s = s.filter("term", domain=domain)
         for search_argument in search:
             s = s.query("query_string", query='*{}*'.format(search_argument), analyze_wildcard=True)
+        if port:
+            s = s.filter("term", port=port)
         return s
 
 
@@ -554,6 +556,7 @@ class CredentialSearch(CoreSearch):
         core_parser.add_argument('--cracked', help="Only include hashes / passwords that were cracked", action="store_true")
         core_parser.add_argument('-r', '--range', type=str, help="Range/IP to find results")
         core_parser.add_argument('-d', '--domain', type=str, help="Domain to include")
+        core_parser.add_argument('--port', type=int, help="Port to include")
         return core_parser
 
 
