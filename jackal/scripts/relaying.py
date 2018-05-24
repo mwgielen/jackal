@@ -78,7 +78,7 @@ class Spoofing(object):
             Starts the ntlmrelayx.py and responder processes.
             Assumes you have these programs in your path.
         """
-        self.relay = subprocess.Popen(['ntlmrelayx.py', '-tf', self.targets_file, '-w', '-l', self.directory, '-of', self.output_file])
+        self.relay = subprocess.Popen(['ntlmrelayx.py', '-tf', self.targets_file, '-w', '-l', self.directory, '-of', self.output_file], cwd=self.directory)
         self.responder = subprocess.Popen(['responder', '-I', self.interface_name])
 
 
