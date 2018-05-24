@@ -102,6 +102,7 @@ def draw_interface(objects, callback, callback_text):
     max_row = height - 15 # max number of rows
     box = curses.newwin( max_row + 2, int(width - 2), 1, 1 )
     box.box()
+    fmt = PartialFormatter()
 
     row_num = len( objects )
 
@@ -157,7 +158,7 @@ def draw_interface(objects, callback, callback_text):
             screen.erase()
             screen.border( 0 )
             service = objects[position -1]
-            text = callback_text.format(**service)
+            text = fmt.format(callback_text, **service)
             screen.addstr( max_row + 4, 3, text)
             text  = callback(service)
             count = 0
