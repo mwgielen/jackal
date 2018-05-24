@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 import argparse
-import ipaddress
 import os
-import socket
 import subprocess
 from struct import pack
 
-import psutil
 from jackal import Service, ServiceSearch, HostSearch, Host
 from jackal.config import Config
-from jackal.utils import print_error, print_notification, print_success, draw_interface
+from jackal.utils import print_error, print_notification, print_success, draw_interface, get_own_ip
 
 
 class Eternalblue(object):
@@ -201,22 +198,6 @@ run -j
         else:
             return ["System target could not be automatically identified"]
         return result.stdout.decode('utf-8').split('\n')
-
-
-def get_own_ip():
-    """
-        Gets the IP from the inet interfaces.
-    """
-    own_ip = None
-    interfaces = psutil.net_if_addrs()
-    for _, details in interfaces.items():
-        for detail in details:
-            if detail.family == socket.AF_INET:
-                ip_address = ipaddress.ip_address(detail.address)
-                if not (ip_address.is_link_local or ip_address.is_loopback):
-                    own_ip = str(ip_address)
-                    break
-    return own_ip
 
 
 def main():
