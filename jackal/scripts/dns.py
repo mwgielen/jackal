@@ -2,12 +2,12 @@
 import argparse
 import ipaddress
 import re
-import subprocess
-import psutil
 import socket
+import subprocess
 
 import dns.resolver
-from jackal import Host, HostSearch, Range, RangeSearch
+import psutil
+from jackal import HostSearch, RangeSearch
 from jackal.utils import print_error, print_notification, print_success
 
 
@@ -78,7 +78,7 @@ def parse_ips(ips, netmask, include_public):
         if include_public or ip_address.is_private:
             print_success("Found ip: {}".format(ip))
             host = hs.id_to_object(ip)
-            host.add_tag('stuff')
+            host.add_tag('dns_discover')
             host.save()
             r = str(ipaddress.IPv4Network(
                 "{}/{}".format(ip, netmask), strict=False))
@@ -91,7 +91,7 @@ def parse_ips(ips, netmask, include_public):
     for rng in ranges:
         print_success("Found range: {}".format(rng))
         r = rs.id_to_object(rng)
-        r.add_tag('stuff')
+        r.add_tag('dns_discover')
         r.save()
 
     stats = {}
