@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='jackal',
-      version='0.7.3',
+      version='0.7.4',
       description='Jackal provides a way to store results from hacking tools in a single place.',
       author='Matthijs Gielen',
       author_email='github@mwgielen.com',
@@ -51,7 +51,7 @@ setup(name='jackal',
               'jk-exploit-relay = jackal.scripts.relaying:main',
               'jk-import-secretsdump = jackal.scripts.secretsdump:import_secretsdump',
               'jk-nmap-smb-os = jackal.scripts.nmap:os_discovery',
-              'jk-dns-discover = jackal.scripts.dns:main',
+              'jk-dns-discover = jackal.scripts.dns_discover:main',
               'jk-ldap-bruteforce = jackal.scripts.ldap:main',
           ]
       })
