@@ -6,6 +6,7 @@ import socket
 import subprocess
 
 import dns.resolver
+import dns.zone
 import psutil
 from jackal import HostSearch, RangeSearch
 from jackal.utils import print_error, print_notification, print_success
