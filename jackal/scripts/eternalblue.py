@@ -204,7 +204,7 @@ def main():
     argparser = argparse.ArgumentParser(description="Eternalblue exploit. Will use the services tagged with MS17-010. First run setup, then exploit.")
     argparser.add_argument('type', metavar='type', \
         help='setup or exploit', \
-        type=str, choices=['setup', 'exploit'], default='setup', nargs='?')
+        type=str, choices=['setup', 'exploit'])
     own_ip = get_own_ip()
     argparser.add_argument('--ip', help='Local ip to use, default is {}'.format(own_ip), \
         type=str, default=own_ip)
