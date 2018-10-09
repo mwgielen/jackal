@@ -167,8 +167,9 @@ class RangeSearch(CoreSearch):
                 search = search.exclude("term", tags=tag[1:])
             else:
                 search = search.filter("term", tags=tag)
+        if kwargs.get('range'):
+            search = search.query('query_string', query="range: \"{}\"".format(kwargs.get('range')))
 
-        # TODO implement range filter.
         return search
 
     def get_ranges(self, *args, **kwargs):
