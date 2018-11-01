@@ -77,15 +77,18 @@ def parse_domain_computers(filename):
         entry_count += 1
         parsed = parse_single_computer(system)
         if parsed.ip:
-            host = hs.id_to_object(parsed.ip)
-            host.description.append(parsed.description)
-            host.hostname.append(parsed.dns_hostname)
-            if parsed.os:
-                host.os = parsed.os
-            host.domain_controller = parsed.dc
-            host.add_tag('domaindump')
-            host.save()
-            count += 1
+            try:
+                host = hs.id_to_object(parsed.ip)
+                host.description.append(parsed.description)
+                host.hostname.append(parsed.dns_hostname)
+                if parsed.os:
+                    host.os = parsed.os
+                host.domain_controller = parsed.dc
+                host.add_tag('domaindump')
+                host.save()
+                count += 1
+            except ValueError:
+                pass
         sys.stdout.write('\r')
         sys.stdout.write(
             "[{}/{}] {} resolved".format(entry_count, len(data), count))
@@ -141,11 +144,15 @@ def parse_user(entry, domain_groups):
     groups.append(domain_groups.get(primary_group, ''))
     result['groups'] = groups
 
-    uac = int(get_field(entry, 'userAccountControl'))
     flags = []
-    for flag, value in uac_flags.items():
-        if uac & value:
-            flags.append(flag)
+    try:
+        uac = int(get_field(entry, 'userAccountControl'))
+
+        for flag, value in uac_flags.items():
+            if uac & value:
+                flags.append(flag)
+    except ValueError:
+        pass
     result['flags'] = flags
     return result
 
